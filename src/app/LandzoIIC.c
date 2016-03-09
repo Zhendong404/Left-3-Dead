@@ -331,46 +331,43 @@ void IICReadGpio_inint(void)
 //--------------------------------------------------------------------------------------------------
 uint8_t LandzoIICEEROM_INIT(void){
   uint8_t LandzoOK ;
-  uint16_t i ,EROMCont = 212 ;
-  uint8_t IIClandzo_buff[512] ;
+  uint16_t i ,EROMCont = 212;
+  uint8_t IIClandzo_buff[512];  //接收信号buffer
   
 
   IICWriteGpio_inint() ;    //初始化读入IIC端口
-  for(i = 0 ; i < EROMCont ;)
+  for(i = 0; i < EROMCont; i += 2)
   {
-    LandzoOK = writeNbyte(0XDC,&LandzoRAM[i],2);
-    if(!LandzoOK) break ;
-    i = i +2 ;
+    LandzoOK = writeNbyte(0XDC,&LandzoRAM[i],2);        //RAM里是对于摄像头的机器码设置文件
+    if(!LandzoOK) break;
   }
  
   BFDly_ms(100) ;                 //延迟100us
   
-  if( !LandzoOK )
+  if(!LandzoOK)         //检测是否正确写入，若未写入重新初始化数据
   {
     IICWriteGpio_inint() ;    //初始化读入IIC端口
-    for(i = 0 ; i < EROMCont ;)
+    for(i = 0; i < EROMCont; i += 2)
     {
       LandzoOK = writeNbyte(0XDC,&LandzoRAM[i],2);
       if(!LandzoOK) break ;
-      i = i +2 ;
     }
   }
   
   if(!LandzoOK)
-    {return IICEorr;}
+    {return IICEorr;}   //若初始化仍未完成，返回异常
   
-  for(i = 0 ; i < EROMCont ; )
+  for(i = 0; i < EROMCont; i += 2)
   {
     IIClandzo_buff[i] = LandzoRAM[i] ; 
-  //  uart_putchar(UART0,IIClandzo_buff[i]);
+  //  uart_putchar(UART0,IIClandzo_buff[i]);            //？
     BFdelay_1us(10);      // 延时1us 
-    LandzoOK = receiveNbyte(0XDD,&IIClandzo_buff[i],1) ;
-    i += 2;
+    LandzoOK = receiveNbyte(0XDD,&IIClandzo_buff[i],1) ;        //参数接收并存入buffer
   }
   
-  for(i = 0 ;i < EROMCont ; i++)
+  for(i = 0; i < EROMCont; i++)                 //参数检查，如果接收到的参数和原设定参数不同则返回error
   {
-    if(LandzoRAM[i] != IIClandzo_buff[i] )
+    if(LandzoRAM[i] != IIClandzo_buff[i])
     return IICEorr ;
   }
    

@@ -57,7 +57,7 @@ void Camera_Black(uint8 *point1,uint8 *rightblackedge,uint8 *leftblackedge,uint8
   leftflag=0;      //左丢线标志位
   rightflag=0;     //右丢线标志位
   
-  for(int i=0;i<140;i++)
+  for(int i = 0; i < 140; i++)  //二值化
   {
     if( *point1++ > FAV)
     {
@@ -70,15 +70,15 @@ void Camera_Black(uint8 *point1,uint8 *rightblackedge,uint8 *leftblackedge,uint8
   } 
  
    /*查找左边沿开始，找到边沿后跳出循环*/
-  for(temp0=centre_lastblack;temp0>5;temp0--)               //检测左侧边沿
+  for(temp0 = centre_lastblack; temp0 > 5; temp0--)               //检测左侧边沿
   {    
-    for(temp1=temp0; temp1>( temp0-LINEWITH );temp1--)      //寻找一点附近的几个点是否能构成下降沿
+    for(temp1 = temp0; temp1 > (temp0 - LINEWITH); temp1--)      //寻找一点附近的几个点是否能构成下降沿
     {    
-      if(temp1<=0) break;                                   //不满足实际条件跳出循环             
+      if(temp1 <= 0) break;                                   //不满足实际条件跳出循环 （点的位置）            
       
-      temp_value1= point[temp0]-point[temp1];               //比较白点附近的几个值
+      temp_value1 = point[temp0] - point[temp1];               //比较白点附近的几个值
       
-      if(temp_value1>=LEFTLINEFAV)                          //判断是否满足要求
+      if(temp_value1>=LEFTLINEFAV)                          //判断是否满足要求（电压值跳变）
       {
         leftcount++;                                        //满足条件计数值加一
    //     testarry[temp0]=temp_value1;
@@ -93,17 +93,17 @@ void Camera_Black(uint8 *point1,uint8 *rightblackedge,uint8 *leftblackedge,uint8
     if(leftcount >= LINEWITH-1 )                        //判断是否满足边沿条件
     {
       leftedge = temp0 ;                                  //满足条件边沿找到
-      leftflag=0;                                         //找到边沿，标志位置1 
+      leftflag = 0;                                         //找到边沿，标志位置1 
       break;
     }
     else
     {
-      leftcount=0;                                        //未找到清除计数  
-      leftflag=1;                                         //标志位清除
-      leftedge=5;                                         // 边沿赋值 
+      leftcount = 0;                                        //未找到清除计数  
+      leftflag = 1;                                         //标志位清除
+      leftedge = 5;                                         // 边沿赋值 
     }
      
-    if(leftedge<5) leftedge = 5;   
+    if(leftedge < 5) leftedge = 5;   
   } 
   /*左边沿查找结束*/
   
