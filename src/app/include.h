@@ -34,6 +34,7 @@
 #include   "LandzoIIC.h"
 #include   "LandzoCamera.h"
 #include   "LandzoOLED.h"
+#include   "SCCB.h"
 
 //#include  "isr.h"      //isr
 

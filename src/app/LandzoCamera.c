@@ -2,6 +2,7 @@
 #include "include.h"
 #include  "Landzocamera.h"
 #include "calculation.h"
+#include "SCCB.h"
 
 
 /*********************************************************** 
@@ -14,11 +15,58 @@
 extern uint8  BUFF[500] ;
 void Camera_init(void)
 {
-     gpio_Interrupt_init(PORTD,14, GPI_UP,FALLING) ;          //场中断
-     gpio_Interrupt_init(PORTD,13, GPI_DOWN, RING) ;          //行中断 
+     gpio_Interrupt_init(PORTD,1, GPI_UP,FALLING) ;          //场中断 VSYNC
+     gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //行中断 HREF
+     DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTB_BYTE0_IN, BUFF, PTB9,
+                          DMA_BYTE1, DATACOUNT, DMA_rising_down);
+     
+     /*gpio_Interrupt_init(PORTD,14, GPI_UP,FALLING) ;          //场中断 VSYNC
+     gpio_Interrupt_init(PORTD,13, GPI_DOWN, RING) ;
      DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTE_BYTE0_IN, BUFF, PTD12,
-                          DMA_BYTE1, DATACOUNT, DMA_rising_down); //初始化DMA模块    
+                          DMA_BYTE1, DATACOUNT, DMA_rising_down);*/ //初始化DMA模块    PTD12为PCLK,硬件为PTB9
+     
 }
+
+/*********************************************************** 
+* 函数名称：CameraRegInit
+* 函数功能：对摄像头寄存器进行初始化
+* 入口参数：
+* 出口参数：无 
+* 备 注： 
+***********************************************************/
+uint8_t CameraRegInit(void)
+{
+  uint8_t CameraOK = 1;
+  //uint16_t i ,EROMCont = 212;
+  //uint8_t buff[512];  //接收信号buffer
+  
+  SCCBPortInit();               //初始化SCCB端口
+  
+    //复位摄像头所有寄存器
+    CameraOK = SCCBWriteByte(Predator_COMCTRLA, 0x80);        //RAM里是对于摄像头的机器码设置文件
+    if(!CameraOK)
+    {
+      uart_sendN(UART0, (uint8 *)"\nCamera Writing Predator_COMCTRLA Failed!", 40);
+      return 0;
+    }
+    
+    //延时
+    BFDly_ms(50);    
+    
+    //QVGA模式设置。
+    CameraOK = SCCBWriteByte(Predator_COMCTRLC,0x24);
+    if(!CameraOK)
+    {
+        uart_sendN(UART0, (uint8 *)"\nCamera Writing OV7620_COMCTRLC Failed!", 39);
+        return 0;
+    }
+    
+    //配置Camera各寄存器均成功
+    uart_sendN(UART0, (uint8 *)"\nCamera Registers Initial Finally Succeed!", 42);
+    return 1;
+  
+}
+
 
 /**************************************************************
 *

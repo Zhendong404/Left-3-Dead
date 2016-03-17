@@ -97,7 +97,8 @@ void main()
   
   while(checkflag != 1 )  
    {
-     checkflag = LandzoIICEEROM_INIT() ; //通过配置使摄像头输出数字信号
+     //checkflag = LandzoIICEEROM_INIT() ; //通过配置使摄像头输出数字信号
+     checkflag = CameraRegInit() ;        //通过配置使摄像头输出数字信号
      BFdelay_1us(100);                   // 延时100us 
    }
   

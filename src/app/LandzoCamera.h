@@ -10,6 +10,15 @@
 #define  DATACOUNT  140        //采样点数
 #define  ADLENGT    4000     
  /**********************/
+
+/**************************
+*摄像头寄存器
+*************************/
+#define Predator_COMCTRLA  0x12
+#define Predator_CLKCTRL   0x11
+#define Predator_COMCTRLC  0x14
+#define Predator_COMCTRLH  0x28
+
 /********************************************************************/
 
 void Camera_init(void);
