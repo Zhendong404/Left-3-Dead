@@ -219,7 +219,7 @@ void PORTC_IRQHandler()
   {
     PORTD_ISFR  |= 0x0100;                              //写1清中断标志位  
     
-    if(Sample_Line_flag )
+    if(Sample_Line_flag)
     {       
       Sample_Line_flag = 0;  
           
@@ -230,13 +230,13 @@ void PORTC_IRQHandler()
       Sample_Line_Count ++ ;                             //采样行数 
     }
     
-    LineCount ++ ;
-    if(*pSample_Line == LineCount )
+    LineCount++;                                //统计到目前为止扫描了几行
+    if(*pSample_Line == LineCount )             //如果扫描的行是我们需要采集的行，置标志位
     {         
       Sample_Line_flag = 1 ;
       if(*pSample_Line != 0xFFff )
       {
-        pSample_Line ++ ;
+        pSample_Line++;
       }
     }
   }

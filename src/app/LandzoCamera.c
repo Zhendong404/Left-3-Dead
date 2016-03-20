@@ -13,9 +13,10 @@
 * 出口参数：无 
 * 备 注： 
 ***********************************************************/
-extern uint8  BUFF[500] ;
+extern uint8 BUFF[500];
 void Camera_init(void)
 {
+<<<<<<< HEAD
      gpio_Interrupt_init(PORTD,1, GPI_UP,FALLING) ;          //场中断 VSYNC
      gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //行中断 HREF
      DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTB_BYTE0_IN, BUFF, PTB9,
@@ -25,6 +26,13 @@ void Camera_init(void)
      DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTE_BYTE0_IN, BUFF, PTD12,
                           DMA_BYTE1, DATACOUNT, DMA_rising_down);*/ //初始化DMA模块    PTD12为PCLK,硬件为PTB9
      
+=======
+     gpio_Interrupt_init(PORTD,14, GPI_UP,FALLING) ;          //场中断，接端口14，端口电平上拉，下降沿出发
+     gpio_Interrupt_init(PORTD,13, GPI_DOWN, RING) ;          //行中断，接端口13，端口电平下拉，上升沿触发
+     DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTE_BYTE0_IN, BUFF, PTD12,
+                          DMA_BYTE1, DATACOUNT, DMA_rising_down); //初始化DMA模块，实现数据快速转移
+                                                                  //第四通道；PTD12未使用；DATACOUNT：列数
+>>>>>>> origin/master
 }
 
 /*********************************************************** 

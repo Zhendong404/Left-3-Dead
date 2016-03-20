@@ -197,7 +197,7 @@ void main()
         FTM_PWM_Duty(FTM0 , CH1,SpeedPWM_Value);                              //FTM0 CH1 PWM输出 ；电机控制  
     }
     
-    if(DMA_Over_Flag==1)
+    if(DMA_Over_Flag==1)                                                        //为防止采集速度快于处理速度，将已扫描的数据进行搬运拷贝
     {
       DMA_Over_Flag=0;      
     //  PTA16_OUT=1;
