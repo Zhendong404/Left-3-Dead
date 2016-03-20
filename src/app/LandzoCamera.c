@@ -3,6 +3,7 @@
 #include  "Landzocamera.h"
 #include "calculation.h"
 #include "SCCB.h"
+#include "uart.h"
 
 
 /*********************************************************** 
@@ -19,7 +20,6 @@ void Camera_init(void)
      gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //行中断 HREF
      DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTB_BYTE0_IN, BUFF, PTB9,
                           DMA_BYTE1, DATACOUNT, DMA_rising_down);
-     
      /*gpio_Interrupt_init(PORTD,14, GPI_UP,FALLING) ;          //场中断 VSYNC
      gpio_Interrupt_init(PORTD,13, GPI_DOWN, RING) ;
      DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTE_BYTE0_IN, BUFF, PTD12,
@@ -34,7 +34,7 @@ void Camera_init(void)
 * 出口参数：无 
 * 备 注： 
 ***********************************************************/
-uint8_t CameraRegInit(void)
+/*uint8_t CameraRegInit(void)           //Sirius的代码，不要了
 {
   uint8_t CameraOK = 1;
   //uint16_t i ,EROMCont = 212;
@@ -65,7 +65,7 @@ uint8_t CameraRegInit(void)
     uart_sendN(UART0, (uint8 *)"\nCamera Registers Initial Finally Succeed!", 42);
     return 1;
   
-}
+}*/
 
 
 /**************************************************************

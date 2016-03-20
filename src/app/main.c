@@ -14,6 +14,9 @@
 #include "include.h"
 #include "calculation.h"
 
+//#define UART_DEBUG
+#define DEBUG
+
 /*************************
 设置系统的中断函数变量
 *************************/
@@ -68,7 +71,7 @@ uint8  Rightblackedge[DATAROW]={0};
 uint8  Leftblackedge[DATAROW]={0};
 uint8  CameraStation[DATAROW]={0};
 
-
+#ifdef DEBUG
 void main()
 {
   DisableInterrupts;                             //禁止总中断 
@@ -97,8 +100,8 @@ void main()
   
   while(checkflag != 1 )  
    {
-     //checkflag = LandzoIICEEROM_INIT() ; //通过配置使摄像头输出数字信号
-     checkflag = CameraRegInit() ;        //通过配置使摄像头输出数字信号
+     checkflag = LandzoIICEEROM_INIT() ; //通过配置使摄像头输出数字信号
+     //checkflag = CameraRegInit() ;        //通过配置使摄像头输出数字信号
      BFdelay_1us(100);                   // 延时100us 
    }
   
@@ -160,24 +163,25 @@ void main()
       PTA16_OUT = ~PTA16_OUT ;                                                //测试LED闪烁      
      // PTA17_OUT = ~PTA17_OUT ;                                                //测试LED闪烁  
       
-      uart_putchar (UART0, 0xff); 
-      uart_putchar (UART0, 0xff); 
-      uart_putchar (UART0, (uint8)(Speed_Count>>8)); 
-      uart_putchar (UART0, (uint8)(Speed_Count)); 
-//      uart_putchar (UART0, '*');   
-//      uart_putchar (UART0, '#');   
-//      uart_putchar (UART0, '*');   
-//      finger=&ADdata[0][0];
-//      gpio_Interrupt_init(PORTD,14, GPI_UP,GPI_DISAB) ;          //场中断
-//      gpio_Interrupt_init(PORTD,13, GPI_DOWN, GPI_DISAB) ;          //行中断 
-//      DMA_IRQ_DIS(DMA_CH4);
-//      DMA_DIS(DMA_CH4);
-//      for(int i=0;i<DATAROW*g_PointCount;i++)
-//      {            
-//        uart_putchar (UART0, *finger++);     
-//      }
-//      gpio_Interrupt_init(PORTD,14, GPI_UP,FALLING) ;          //场中断
-//      gpio_Interrupt_init(PORTD,13, GPI_DOWN, RING) ;          //行中断 
+      //uart_putchar (UART0, 0xff);     //test use 
+      //uart_putchar (UART0, 0xff); 
+      //uart_putchar (UART0, (uint8)(Speed_Count>>8)); 
+      //uart_putchar (UART0, (uint8)(Speed_Count));
+      
+      uart_putchar (UART0, '*');   
+      uart_putchar (UART0, '#');   
+      uart_putchar (UART0, '*');   
+      finger=&ADdata[0][0];
+      gpio_Interrupt_init(PORTD,1, GPI_UP,GPI_DISAB) ;          //场中断
+      gpio_Interrupt_init(PORTC,8, GPI_DOWN, GPI_DISAB) ;          //行中断 
+      DMA_IRQ_DIS(DMA_CH4);
+      DMA_DIS(DMA_CH4);
+      for(int i=0;i<DATAROW*g_PointCount;i++)
+      {            
+        uart_putchar (UART0, *finger++);     
+      }
+      gpio_Interrupt_init(PORTD,1, GPI_UP,FALLING) ;          //场中断
+      gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //行中断 
       
     }
     
@@ -187,7 +191,7 @@ void main()
     if(TIME0flag_100ms == 1)
     { 
       TIME0flag_100ms = 0 ;
-      
+      //uart_putchar (UART0, 0xff);       //test
       SpeedPWM_Value =SpeedControl(Speed_Count,Set_Speed,Speed_P,Speed_I,Speed_D) ;    //PID函数计算PWM值          
         FTM_PWM_Duty(FTM0 , CH0,0);                                           //FTM0 CH0 PWM输出 ；电机控制
         FTM_PWM_Duty(FTM0 , CH1,SpeedPWM_Value);                              //FTM0 CH1 PWM输出 ；电机控制  
@@ -256,6 +260,22 @@ void main()
     
   }
 }
+#endif
+
+#ifdef UART_DEBUG
+void main(void)
+{
+  DisableInterrupts;
+  uart_init (UART0 , 115200);
+  EnableInterrupts;
+  char ch = 'c';
+  while(1)
+  {
+    uart_putchar(UART0, ch);
+    BFDly_ms(100);
+  }
+}
+#endif
 
 
 

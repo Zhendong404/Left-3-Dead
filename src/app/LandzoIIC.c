@@ -23,6 +23,7 @@ uint8_t  LandzoRAM[ ] ={
 
 
 
+
 /*-----------------------------------------------------------------------
 delay_1ns         : 延时程序
 编写日期          ：2013-12-15 
@@ -307,9 +308,9 @@ uint8_t receiveNbyte(uint8_t slave_add,uint8_t *rece_data, uint16_t n)
 //--------------------------------------------------------------------------------------------------
 void IICWriteGpio_inint(void)
 {
-    gpio_init (PORTE , 10, GPO,HIGH); 
+    gpio_init (PORTA , 25, GPO,HIGH); 
     gpio_init (PORTE , 11, GPO,HIGH);
-    gpio_init (PORTE , 12, GPO,HIGH);
+    gpio_init (PORTA , 26, GPO,HIGH);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -319,9 +320,9 @@ void IICWriteGpio_inint(void)
 //--------------------------------------------------------------------------------------------------
 void IICReadGpio_inint(void)
 {
-    gpio_init (PORTE , 10, GPO,HIGH); 
+    gpio_init (PORTA , 25, GPO,HIGH); 
     gpio_init (PORTE , 11, GPO,HIGH);
-    gpio_init (PORTE , 12, GPO,HIGH);
+    gpio_init (PORTA , 26, GPO,HIGH);
 }
 //--------------------------------------------------------------------------------------------------
 // 函数名称： LandzoIICEEROM
@@ -339,7 +340,12 @@ uint8_t LandzoIICEEROM_INIT(void){
   for(i = 0; i < EROMCont; i += 2)
   {
     LandzoOK = writeNbyte(0XDC,&LandzoRAM[i],2);        //RAM里是对于摄像头的机器码设置文件
-    if(!LandzoOK) break;
+    //uart_putchar(UART0, LandzoRAM[i]);          //test
+    if(!LandzoOK) 
+    {
+      uart_sendStr(UART0, (const u8 *)"writeNbyte failded\n");
+      break;
+    }
   }
  
   BFDly_ms(100) ;                 //延迟100us
@@ -360,18 +366,24 @@ uint8_t LandzoIICEEROM_INIT(void){
   for(i = 0; i < EROMCont; i += 2)
   {
     IIClandzo_buff[i] = LandzoRAM[i] ; 
-  //  uart_putchar(UART0,IIClandzo_buff[i]);            //？
+               //？
     BFdelay_1us(10);      // 延时1us 
-    LandzoOK = receiveNbyte(0XDD,&IIClandzo_buff[i],1) ;        //参数接收并存入buffer
+    LandzoOK = receiveNbyte(0XDD,&IIClandzo_buff[i],1) ;        //参数接收并存入buffer 
   }
   
   for(i = 0; i < EROMCont; i++)                 //参数检查，如果接收到的参数和原设定参数不同则返回error
   {
     if(LandzoRAM[i] != IIClandzo_buff[i])
-    return IICEorr ;
+    {
+      //uart_putchar(UART0, i);
+      //uart_putchar(UART0, LandzoRAM[i]);
+      //uart_putchar(UART0, IIClandzo_buff[i]);
+      //return IICEorr ;
+    }
+    
   }
    
- //  uart_putchar(UART0,IICOK);
+  //uart_putchar(UART0,IICOK);
   return  IICOK ;
 
     

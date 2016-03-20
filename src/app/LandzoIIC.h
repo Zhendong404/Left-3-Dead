@@ -3,9 +3,9 @@
 
 
 #define BFEND      PTE11_OUT
-#define BFSDA      PTE12_OUT
-#define BFCLK      PTE10_OUT
-#define BFSDAI     PTE12_IN
+#define BFSDA      PTA25_OUT
+#define BFCLK      PTA26_OUT
+#define BFSDAI     PTA25_IN
 
 #define IICEorr    (0)
 #define IICOK      (1)

@@ -203,9 +203,21 @@ void PORTD_IRQHandler()
   /***************
   摄像头变量
   ***************/
-  if(PORTD_ISFR & 0x2000)                                 //PTD13触发中断，采集的行中断
+  
+  if(PORTD_ISFR & 0x0002)                     //PTD14触发中断,采集的场中断。
   {
-    PORTD_ISFR  |= 0x2000;                              //写1清中断标志位  
+    PORTD_ISFR  |= 0x0002;                   //写1清中断标志位
+    pSample_Line = &Sample_LineAryy[0] ;    //初始化要采集的行数
+    LineCount = 0 ;                         //清除摄像头行数
+  }
+  
+}
+
+void PORTC_IRQHandler()
+{
+  if(PORTC_ISFR & 0x0100)                                 //PTC8触发中断，采集的行中断
+  {
+    PORTD_ISFR  |= 0x0100;                              //写1清中断标志位  
     
     if(Sample_Line_flag )
     {       
@@ -228,15 +240,8 @@ void PORTD_IRQHandler()
       }
     }
   }
-  
-  if(PORTD_ISFR & 0x4000)                     //PTD14触发中断,采集的场中断。
-  {
-    PORTD_ISFR  |= 0x4000;                   //写1清中断标志位
-    pSample_Line = &Sample_LineAryy[0] ;    //初始化要采集的行数
-    LineCount = 0 ;                         //清除摄像头行数
-  }
-  
 }
+  
 
 /*************************************************************************
 *                             蓝宙电子工作室
