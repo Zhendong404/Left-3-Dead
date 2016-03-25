@@ -16,6 +16,10 @@
 
 //#define UART_DEBUG
 #define DEBUG
+//#define TESTDMA
+
+
+#ifdef DEBUG
 
 /*************************
 设置系统的中断函数变量
@@ -71,7 +75,6 @@ uint8  Rightblackedge[DATAROW]={0};
 uint8  Leftblackedge[DATAROW]={0};
 uint8  CameraStation[DATAROW]={0};
 
-#ifdef DEBUG
 void main()
 {
   DisableInterrupts;                             //禁止总中断 
@@ -160,17 +163,17 @@ void main()
     if(TIME0flag_80ms == 1)
     {        
       TIME0flag_80ms = 0 ;                                                    //清除时间标志位
-      PTA16_OUT = ~PTA16_OUT ;                                                //测试LED闪烁      
-     // PTA17_OUT = ~PTA17_OUT ;                                                //测试LED闪烁  
+      //PTA16_OUT = ~PTA16_OUT ;                                                //测试LED闪烁      
+     PTA17_OUT = ~PTA17_OUT ;                                                //测试LED闪烁  
       
       //uart_putchar (UART0, 0xff);     //test use 
       //uart_putchar (UART0, 0xff); 
       //uart_putchar (UART0, (uint8)(Speed_Count>>8)); 
       //uart_putchar (UART0, (uint8)(Speed_Count));
       
-      uart_putchar (UART0, '*');   
-      uart_putchar (UART0, '#');   
-      uart_putchar (UART0, '*');   
+//      uart_putchar (UART0, '*');   
+//      uart_putchar (UART0, '#');   
+//      uart_putchar (UART0, '*');   
       finger=&ADdata[0][0];
       gpio_Interrupt_init(PORTD,1, GPI_UP,GPI_DISAB) ;          //场中断
       gpio_Interrupt_init(PORTC,8, GPI_DOWN, GPI_DISAB) ;          //行中断 
@@ -178,7 +181,7 @@ void main()
       DMA_DIS(DMA_CH4);
       for(int i=0;i<DATAROW*g_PointCount;i++)
       {            
-        uart_putchar (UART0, *finger++);     
+        //uart_putchar (UART0, *finger++);     
       }
       gpio_Interrupt_init(PORTD,1, GPI_UP,FALLING) ;          //场中断
       gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //行中断 
@@ -201,13 +204,13 @@ void main()
     {
       DMA_Over_Flag=0;      
     //  PTA16_OUT=1;
-      
+
       if( Sample_Line_Count>= DATAROW )
         Sample_Line_Count = 0 ; 
       
       finger1 = &BUFF[0] ;   //前面15个点为行消隐信号，所以采样行是从15开始。
       
-      g_PointCount = DATACOUNT - 0;
+      g_PointCount = DATACOUNT - 0;     //将BUFF的值复制到ADdata
       g_temp0 = Sample_Line_Count  * g_PointCount ;
       finger = &ADdata[Sample_Line_Count][0] ;           
       for(g_temp0 = 0 ;g_temp0 < g_PointCount ;g_temp0++ )
@@ -219,7 +222,6 @@ void main()
       
      Camera_Black(&ADdata[Sample_Line_Count][0],&Rightblackedge[Sample_Line_Count],
                   &Leftblackedge[Sample_Line_Count],&CameraStation[Sample_Line_Count]);
-      
     }  
     
 //    if(Sample_Over>=DATAROW)
@@ -274,6 +276,102 @@ void main(void)
     uart_putchar(UART0, ch);
     BFDly_ms(100);
   }
+}
+#endif
+
+#ifdef TESTDMA
+
+extern  u8  LPT_INT_count ;
+extern  u8  DMA_Over_Flag ;            //采集完成标志位
+//extern  u8  LinADCout ;
+//extern  uint8_t  LandzoRAM[ ];
+
+//extern u8 TIME0flag_5ms   ;
+//extern u8 TIME0flag_10ms  ;
+//extern u8 TIME0flag_15ms  ;
+//extern u8 TIME0flag_20ms  ;
+//extern u8 TIME0flag_80ms  ;
+//extern u8 TIME1flag_1s ;
+
+
+//u8  BUFF[500] ;
+//u8 Atem8B0 = 0 ;
+//u8 ALineOverCout = 0 ;                 //采集完成黑线行数
+//u8 ALineCal = 0 ;          
+u8 ADdata[DATAROW][DATACOUNT] ={ 0  } ;        //黑线AD数组存储
+//u16 Atemp0 ;
+//u8  *finger,*finger1;
+u8  checkflg = 0 ;     
+void main()
+{
+  uint8 i=0,j=0;
+  DisableInterrupts;                             //禁止总中断 
+
+  /*********************************************************
+  初始化程序
+  *********************************************************/
+   //自行添加代码
+ 
+   uart_init (UART0 , 115200);                      //初始化UART0，输出脚PTA15，输入脚PTA14，串口频率 9600
+   
+    /***************************
+    初始化摄像头采样
+    ***************************/
+   Camera_init();
+
+   gpio_init (PORTA , 16, GPO,HIGH); 
+   gpio_init (PORTA , 17, GPO,HIGH); 
+   pit_init_ms(PIT0, 5);                                    //初始化PIT0，定时时间为： 5ms
+   pit_init_ms(PIT1, 1000);                                //初始化PIT1，定时时间为： 1000ms 
+   
+   uint8 checkflg = 0;
+   while(checkflg != 1 )  
+   {
+     checkflg = LandzoIICEEROM_INIT() ;
+     BFdelay_1us(100);      // 延时100us 
+  //   uart_putchar(UART0,0xff);
+   }
+   EnableInterrupts;			                    //开总中断  
+
+   /******************************************
+    执行程序
+    ******************************************/
+    while(1)
+    {
+ 
+  
+      if(DMA_Over_Flag == 1)
+      {
+        DMA_Over_Flag = 0 ;
+
+       
+
+     gpio_Interrupt_init(PORTD,1, GPI_UP,GPI_DISAB) ;          //场中断
+     gpio_Interrupt_init(PORTC,8, GPI_DOWN, GPI_DISAB) ;          //行中断 
+        
+       uart_putchar(UART0,0xff);
+      //uart_putchar(UART0,0xfb);
+       //uart_putchar(UART0,0xbb);
+       for(i=0;i<DATAROW;i++)
+         for(j=0;j<DATACOUNT;j++){
+           if(ADdata[i][j]==0xff)
+             ADdata[i][j]=0xfe;
+           uart_putchar(UART0,ADdata[i][j]);}
+     gpio_Interrupt_init(PORTD,1, GPI_UP,FALLING) ;          //场中断
+
+         }
+      
+      /*********************
+      1s程序执行代码段
+      *********************/      
+//      if(TIME1flag_1s == 1)
+//      {
+//        PTA17_OUT = ~PTA17_OUT ;
+//        TIME1flag_1s = 0 ; 
+//     
+//      }
+
+    }
 }
 #endif
 

@@ -86,11 +86,11 @@ void DMA_PORTx2BUFF_Init(DMA_CHn CHn, void *SADDR, void *DADDR, PTxn ptxn, DMA_B
                              | DMA_CSR_INTMAJOR_MASK        //主循环结束后产生中断
                             );
 
-   //配置 DMA 触发源 
+   /* 配置 DMA 触发源 */
     DMAMUX_CHCFG_REG(DMAMUX_BASE_PTR, CHn) = (0
-            | DMAMUX_CHCFG_ENBL_MASK                          // Enable routing of DMA request 
-          //  | DMAMUX_CHCFG_TRIG_MASK                        // Trigger Mode: Periodic   PIT周期触发传输模式   通道1对应PIT1，必须使能PIT1，且配置相应的PIT定时触发 
-            | DMAMUX_CHCFG_SOURCE(DMA_Always_EN1)  // 通道触发传输源:     
+            | DMAMUX_CHCFG_ENBL_MASK                        /* Enable routing of DMA request */
+            //| DMAMUX_CHCFG_TRIG_MASK                        /* Trigger Mode: Periodic   PIT周期触发传输模式   通道1对应PIT1，必须使能PIT1，且配置相应的PIT定时触发 */
+            | DMAMUX_CHCFG_SOURCE(DMA_Always_EN1) /* 通道触发传输源:     */
                                              );
 
     SIM_SCGC5 |= (SIM_SCGC5_PORTA_MASK << (ptxn>>5));                                                               //开启PORTx端口
@@ -100,7 +100,7 @@ void DMA_PORTx2BUFF_Init(DMA_CHn CHn, void *SADDR, void *DADDR, PTxn ptxn, DMA_B
             | PORT_PCR_IRQC(cfg & 0x03 )    // 确定触发模式
             | ((cfg & 0xc0 ) >> 6)          // 开启上拉或下拉电阻，或者没有
                                                     );
-    GPIO_PDDR_REG(GPIOx[(ptxn>>5)]) &= ~(1 << (ptxn & 0x1F));                                                      //输入模式
+    GPIO_PDDR_REG(GPIOx[(ptxn>>5)]) &= ~(1 << (ptxn && 0x1F));                                                               //输入模式
 
     //  配置输入源   
     SIM_SCGC5 |= (SIM_SCGC5_PORTA_MASK << ((((u32)SADDR) & 0x1ff)>>6));             //开启PORTx端口

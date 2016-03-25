@@ -14,18 +14,12 @@
 * 备 注： 
 ***********************************************************/
 extern uint8 BUFF[500];
-void Camera_init(void)
-{
-     gpio_Interrupt_init(PORTD,1, GPI_UP,FALLING) ;          //场中断 VSYNC
-     gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //行中断 HREF
-     DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTB_BYTE0_IN, BUFF, PTB9,
-                          DMA_BYTE1, DATACOUNT, DMA_rising_down);
-     /*gpio_Interrupt_init(PORTD,14, GPI_UP,FALLING) ;          //场中断 VSYNC
-     gpio_Interrupt_init(PORTD,13, GPI_DOWN, RING) ;
-     DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTE_BYTE0_IN, BUFF, PTD12,
-                          DMA_BYTE1, DATACOUNT, DMA_rising_down);*/ //初始化DMA模块    PTD12为PCLK,硬件为PTB9
-     
-}
+extern uint8  ADdata[DATAROW][DATACOUNT];
+void Camera_init (void){
+     gpio_Interrupt_init(PORTD,1, GPI_UP,FALLING) ;          //场中断
+     gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //行中断 
+     DMA_PORTx2BUFF_Init (DMA_CH4, (void *)&PTB_BYTE0_IN, BUFF, PTB9, DMA_BYTE1, DATACOUNT, DMA_rising_down);
+     }
 
 /*********************************************************** 
 * 函数名称：CameraRegInit

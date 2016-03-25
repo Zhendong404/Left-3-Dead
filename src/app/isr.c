@@ -43,9 +43,10 @@ uint16  TimeCount = 0 ;
 摄像头采用变量
 ***************************/
 uint16 LineCount =0;                                    //摄像头实际行数  最大640
+uint16 LineRealCount = 0;
 uint16 Sample_Line_Count =0;                            //DMA采集的行数
 uint8  Sample_Line_flag =0 ;                           //采样标志位
-uint16 *pSample_Line = 0;                              //采样指针，指向采样行数数组  
+uint16 *pSample_Line = NULL;                              //采样指针，指向采样行数数组  
 uint16 Sample_LineAryy[] = { 262, 270, 278, 0XFFFF, 0XFFFF};  //摄像头采样的行数
 /*************************************************************************
 *                             蓝宙电子工作室
@@ -200,35 +201,53 @@ void HardFault_Handler(void)
 void PORTD_IRQHandler()
 {
   
-  /***************
-  摄像头变量
-  ***************/
   
-  if(PORTD_ISFR & 0x0002)                     //PTD14触发中断,采集的场中断。
+  
+  if(PORTD_ISFR & 0x0002)                     //PTD1触发中断,采集的场中断。
   {
     PORTD_ISFR  |= 0x0002;                   //写1清中断标志位
-    pSample_Line = &Sample_LineAryy[0] ;    //初始化要采集的行数
+    //uart_sendStr(UART0, (const u8*)"enter portD\n");
+    pSample_Line = Sample_LineAryy ;    //初始化要采集的行数
     LineCount = 0 ;                         //清除摄像头行数
+    Sample_Line_Count = 0;
+    
   }
   
 }
 
+
+#ifdef TESTDMA
+uint8 DMA_Over_Flag = 0;
+extern u8  BUFF[500] ;
+extern u8  DMA_Over_Flag ;
+extern u8  ADdata[DATAROW][DATACOUNT];
+void PORTD_IRQHandler(){
+    
+    if(PORTD_ISFR & 0x0002)         //PTD1触发中断,采集的场中断。
+    {
+        PORTD_ISFR  |= 0x0002;        //写1清中断标志位
+       
+    //  uart_putchar(UART0,LinCout>>8);      //采样行数
+     //   uart_putchar(UART0,LinCout);         //采样行数
+      //uart_sendStr(UART0, (const u8*)"portDirq\n");
+        LineCount = 0 ;
+        Sample_Line_Count=0;
+        gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //开启行中断         
+    }
+   
+}
+#endif
+
+
+
+uint8  DMA_Over_Flag = 0 ;     //行采集完成标志位
+extern uint8 ADdata[DATAROW][DATACOUNT];
 void PORTC_IRQHandler()
 {
   if(PORTC_ISFR & 0x0100)                                 //PTC8触发中断，采集的行中断
   {
-    PORTD_ISFR  |= 0x0100;                              //写1清中断标志位  
-    
-    if(Sample_Line_flag)
-    {       
-      Sample_Line_flag = 0;  
-          
-      DMA_IRQ_CLEAN(DMA_CH4);                             //清除通道传输中断标志位    (这样才能再次进入中断)
-      DMA_EN(DMA_CH4);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输) 
-      DMA_IRQ_EN(DMA_CH4) ;                              //允许DMA通道传输
-      
-      Sample_Line_Count ++ ;                             //采样行数 
-    }
+    PORTC_ISFR  |= 0x0100;                              //写1清中断标志位  
+    DMA_IRQ_CLEAN(DMA_CH4); 
     
     LineCount++;                                //统计到目前为止扫描了几行
     if(*pSample_Line == LineCount )             //如果扫描的行是我们需要采集的行，置标志位
@@ -239,9 +258,66 @@ void PORTC_IRQHandler()
         pSample_Line++;
       }
     }
+        if(Sample_Line_flag)
+    {       
+      Sample_Line_flag = 0;  
+          
+      DMA_DADDR(CH4) = (u32)(&ADdata[Sample_Line_Count][0]);                         //清除通道传输中断标志位    (这样才能再次进入中断)
+      DMA_EN(DMA_CH4);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输) 
+      DMA_IRQ_EN(DMA_CH4) ;                              //允许DMA通道传输
+      
+      Sample_Line_Count ++ ;                             //采样行数 
+      
+      
+    }
+      //if(Sample_Line_Count == DATAROW)
+        //DMA_Over_Flag = 1 ; 
   }
 }
-  
+/*
+void PORTC_IRQHandler()
+{
+        if(PORTC_ISFR & 0x0100)            //PTC8触发中断，采集的行中断
+    { 
+        PORTC_ISFR  |= 0x0100;         //写1清中断标志位
+        LineCount ++ ; 
+        DMA_IRQ_CLEAN(DMA_CH4);                             //清除通道传输中断标志位    (这样才能再次进入中断)
+        if((LineCount%(480/DATAROW)==0)&&(Sample_Line_Count<DATAROW))
+        {
+          DMA_DADDR(CH4) = (u32)(&ADdata[ Sample_Line_Count][0]);
+          DMA_EN(DMA_CH4);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输) 
+          DMA_IRQ_EN(DMA_CH4) ;                             //允许DMA通道传输
+        //  PTA16_OUT = ~PTA16_OUT ;
+         Sample_Line_Count++ ;
+        }
+      
+         if(Sample_Line_Count == DATAROW)
+        DMA_Over_Flag = 1 ;
+    }
+}
+*/
+#ifdef TESTDMA
+void PORTC_IRQHandler()
+{
+        if(PORTC_ISFR & 0x0100)            //PTC8触发中断，采集的行中断
+    { 
+        PORTC_ISFR  |= 0x0100;         //写1清中断标志位
+        LineCount ++ ; 
+        DMA_IRQ_CLEAN(DMA_CH4);                             //清除通道传输中断标志位    (这样才能再次进入中断)
+        if((LineCount%(480/DATAROW)==0)&&(Sample_Line_Count<DATAROW))
+        {
+          DMA_DADDR(CH4) = (u32)(&ADdata[Sample_Line_Count][0]);
+          DMA_EN(DMA_CH4);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输) 
+          DMA_IRQ_EN(DMA_CH4) ;                             //允许DMA通道传输
+        //  PTA16_OUT = ~PTA16_OUT ;
+         Sample_Line_Count ++ ;
+        }
+      
+         if(Sample_Line_Count==DATAROW)
+        DMA_Over_Flag = 1 ;
+    }
+}
+#endif
 
 /*************************************************************************
 *                             蓝宙电子工作室
@@ -374,14 +450,15 @@ volatile u32 dma_int_count = 0;
 *  修改时间：2012-3-18    已测试
 *  备    注：
 *************************************************************************/
-uint8  DMA_Over_Flag = 0 ;     //行采集完成标志位
+
 void DMA_CH4_Handler(void)
 {
   //DMA通道4
+  //uart_sendStr(UART0, (const u8*)"enter DMA_CH4\n");
   DMA_IRQ_CLEAN(DMA_CH4) ;
   DMA_IRQ_DIS(DMA_CH4);
   DMA_DIS(DMA_CH4);
-  DMA_Over_Flag = 1 ;
+  DMA_Over_Flag = 1 ;         
   
 }
 

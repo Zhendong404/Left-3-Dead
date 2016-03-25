@@ -7,7 +7,7 @@
 #include "common.h"
 #include <stdarg.h>
 
-#define NPRINTF
+//#define NPRINTF
 
 /********************************************************************/
 

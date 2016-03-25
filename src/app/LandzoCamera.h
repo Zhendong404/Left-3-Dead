@@ -6,7 +6,7 @@
  /**********************
  *摄像头
  *********************/
-#define  DATAROW    3         //采样行数
+#define  DATAROW    50         //采样行数
 #define  DATACOUNT  140        //采样点数
 #define  ADLENGT    4000     
  /**********************/
