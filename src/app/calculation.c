@@ -183,14 +183,8 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 	static u32 duty = 79;
 
 	e2 = DirectionError;
-	/*
-	if(e2 < 2 && e2 > -2)
-	{
-		duty = 73;
-		return duty;
-	}
-	*/
-	
+        if(e2-e1 <= 20 && e2 - e0 <= 20)
+        {
 	//对偏差进行一个非线性的映射
 	//e2 = e2 * e2 / 50;
 
@@ -207,7 +201,7 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 	e0 = e1;
 	e1 = e2;
 	//printf("DutyStd = %ld\t", DutyStd);
-
+        }
 	//输出限位，限制在0-100标准信号
 	if (DutyStd > 100)	DutyStd = 100;
 	if (DutyStd < 0)	DutyStd = 0;
