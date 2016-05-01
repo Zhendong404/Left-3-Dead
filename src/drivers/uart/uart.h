@@ -13,7 +13,7 @@
 
 #ifndef __UART_H__
 #define __UART_H__
-
+#include "common.h"
 typedef enum  UARTn
 {
     //初始化默认配置       --TXD--      --RXD--     可以复用其他通道，请自行修改 uart_init
@@ -32,7 +32,6 @@ extern volatile struct UART_MemMap *UARTx[6];
 
 void uart_init (UARTn, u32 baud);                     //初始化uartx模块
 
-char uart_getcharflg (UARTn uratn)  ;        //接收标志位
 char uart_getchar   (UARTn);                          //无限等待接受1个字节
 char uart_pendchar  (UARTn, char *ch);                //有限时间等待接收一个字符
 char uart_pendstr   (UARTn, char *str);               //有限时间等待接收字符串

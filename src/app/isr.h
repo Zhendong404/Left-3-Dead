@@ -58,7 +58,10 @@
 #define VECTOR_078    FTM0_IRQHandler     //FTM0输入捕捉中断 
 
 #undef  VECTOR_079
-#define VECTOR_079    FTM1_IRQHandler     //FTM0输入捕捉中断
+#define VECTOR_079    FTM1_IRQHandler     //FTM1输入捕捉中断
+
+#undef	VECTOR_080
+#define	VECTOR_080	  FTM2_IRQHandler	  //FTM2输入捕捉中断
 
 #undef  VECTOR_084
 #define VECTOR_084    PIT0_IRQHandler     //重新定义84号中断为PIT0_IRQHandler中断
@@ -69,17 +72,20 @@
 #undef  VECTOR_086
 #define VECTOR_086    PIT2_IRQHandler     //重新定义86号中断为PIT2_IRQHandler中断
 
-#undef  VECTOR_101
-#define VECTOR_101    LPT_Handler        //LPT中断
+#undef  VECTOR_105
+#define VECTOR_105    LPT_Handler        //LPT中断
 
-/*#undef  VECTOR_104
-#define VECTOR_104    PORTB_IRQHandler    //PORTB中断
-*/
+//#undef  VECTOR_104
+//#define VECTOR_104    PORTB_IRQHandler    //PORTB中断
+
 #undef  VECTOR_105
 #define VECTOR_105    PORTC_IRQHandler    //PORTC中断
 
 #undef  VECTOR_106
 #define VECTOR_106    PORTD_IRQHandler    //PORTD中断
+
+#undef  VECTOR_107
+#define VECTOR_107    PORTE_IRQHandler    //PORTE中断
 
 
 
@@ -91,10 +97,12 @@ extern void PIT0_IRQHandler();            //PIT0 定时中断服务函数
 extern void PIT1_IRQHandler();            //PIT1 定时中断服务函数
 extern void PIT2_IRQHandler();            //PIT2 定时中断服务函数
 extern void PORTD_IRQHandler();           //PORTD中断服务函数
-extern void PORTC_IRQHandler();           //PORTC中断服务函数
-extern void PORTB_IRQHandler();           //PORTB中断服务函数
+extern void PORTC_IRQHandler();
+extern void PORTE_IRQHandler();
+//extern void PORTB_IRQHandler();           //PORTB中断服务函数
 extern void FTM0_IRQHandler();            //FTM0输入捕捉中断
-extern void FTM1_IRQHandler();            //FTM0输入捕捉中断
+extern void FTM1_IRQHandler();            //FTM1输入捕捉中断
+extern void FTM2_IRQHandler();			  //FTM2输入捕捉中断
 extern void LPT_Handler(void);           //LPT脉冲中断
 extern void DMA_CH0_Handler(void);
 extern void DMA_CH4_Handler(void);              //DMA通道4的中断服务函数

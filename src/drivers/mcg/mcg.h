@@ -12,8 +12,6 @@
 
 #ifndef __MCG_H__
 #define __MCG_H__
-
-
 enum crystal_val
 {
     XTAL2,

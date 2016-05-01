@@ -30,14 +30,12 @@
 #include  "exti.h"      //EXTI外部GPIO中断
 #include  "arm_math.h"  //DSP库
 #include  "dma.h"       //DMA模块
-//#include   "LandzoCCD.h"
-#include   "LandzoIIC.h"
-#include   "LandzoCamera.h"
-#include   "LandzoOLED.h"
-#include   "SCCB.h"
+#include  "landzo.h"
 
 //#include  "isr.h"      //isr
 
+
+#define ADLENGT    7600
 /***************** ucos 专用 *****************/
 #define USOC_EN     0u      //0为禁止uC/OS，大于0则启动uC/OS
 #if USOC_EN > 0u

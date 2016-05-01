@@ -49,7 +49,7 @@ void gpio_Interrupt_init(PORTx portx, u8 n, GPIO_CFG cfg, u8 mode)
         GPIO_PDDR_REG(GPIOx[portx]) &= ~(1 << n);  //设置端口方向为输入
     }
    
-   set_irq_priority(portx+87,15-n);                //设置中断优先级
+
    enable_irq(portx+87);
   
 }

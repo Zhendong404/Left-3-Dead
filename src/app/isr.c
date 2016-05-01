@@ -1,53 +1,49 @@
 /******************** (C) COPYRIGHT 2011 蓝宙电子工作室 ********************
-* 文件名       ：isr.c
-* 描述         ：中断处理例程
-*
-* 实验平台     ：
-* 库版本       ：
-* 嵌入系统     ：
-*
-* 作者         ：蓝宙电子工作室
-* 淘宝店       ：http://landzo.taobao.com/
+ * 文件名       ：isr.c
+ * 描述         ：中断处理例程
+ *
+ * 实验平台     ：
+ * 库版本       ：
+ * 嵌入系统     ：
+ *
+ * 作者         ：蓝宙电子工作室
+ * 淘宝店       ：http://landzo.taobao.com/
 **********************************************************************************/
 
 
 
 /******************** (C) COPYRIGHT 2011 蓝宙电子工作室 ********************
-* 文件名       ：isr.c
-* 描述         ：中断处理例程
-*
-* 实验平台     ：
-* 库版本       ：
-* 嵌入系统     ：
-*
-* 作者         ：蓝宙电子工作室
-* 淘宝店       ：http://landzo.taobao.com/
+ * 文件名       ：isr.c
+ * 描述         ：中断处理例程
+ *
+ * 实验平台     ：
+ * 库版本       ：
+ * 嵌入系统     ：
+ *
+ * 作者         ：蓝宙电子工作室
+ * 淘宝店       ：http://landzo.taobao.com/
 **********************************************************************************/
 
 
 
 #include "common.h"
 #include "include.h"
+#include "calculation.h"
+
+extern void delayms(uint32 ms);
+extern uint8 ImgNew[CameraHeight][CameraWidth];
+
+u8 TIME0flag_5ms  = 0 ;
+u8 TIME0flag_10ms = 0 ;
+u8 TIME0flag_15ms = 0 ;
+u8 TIME0flag_20ms = 0 ;
+u8 TIME0flag_200ms = 0 ; 
+u8 TIME1flag_1s   = 0 ;
+u8  TimeCount = 0 ;
 
 
-uint8 TIME0flag_5ms  = 0 ;
-uint8 TIME0flag_10ms = 0 ;
-uint8 TIME0flag_20ms = 0 ;
-uint8 TIME0flag_80ms = 0 ; 
-uint8 TIME0flag_100ms = 0 ; 
-uint8 TIME0flag_200ms = 0 ; 
-uint16  TimeCount = 0 ;
 
 
-/**************************
-摄像头采用变量
-***************************/
-uint16 LineCount =0;                                    //摄像头实际行数  最大640
-uint16 LineRealCount = 0;
-uint16 Sample_Line_Count =0;                            //DMA采集的行数
-uint8  Sample_Line_flag =0 ;                           //采样标志位
-uint16 *pSample_Line = NULL;                              //采样指针，指向采样行数数组  
-uint16 Sample_LineAryy[] = { 262, 270, 278, 0XFFFF, 0XFFFF};  //摄像头采样的行数
 /*************************************************************************
 *                             蓝宙电子工作室
 *
@@ -62,16 +58,16 @@ uint16 Sample_LineAryy[] = { 262, 270, 278, 0XFFFF, 0XFFFF};  //摄像头采样的行数
 
 void USART1_IRQHandler(void)
 {
-  uint8 ch;
-  
-  DisableInterrupts;		    //关总中断
-  
-  //接收一个字节数据并回发
-  ch = uart_getchar (UART1);      //接收到一个数据
-  uart_sendStr  (UART1, "\n你发送的数据为：");
-  uart_putchar (UART1, ch);       //就发送出去
-  
-  EnableInterrupts;		    //开总中断
+    uint8 ch;
+
+    DisableInterrupts;		    //关总中断
+
+    //接收一个字节数据并回发
+    ch = uart_getchar (UART1);      //接收到一个数据
+    uart_sendStr  (UART1, "\n你发送的数据为：");
+    uart_putchar (UART1, ch);       //就发送出去
+
+    EnableInterrupts;		    //开总中断
 }
 /*************************************************************************
 *                             蓝宙嵌入式开发工作室
@@ -86,8 +82,9 @@ void USART1_IRQHandler(void)
 
 void PIT1_IRQHandler(void)
 {
-  PIT_Flag_Clear(PIT1);       //清中断标志位
-  
+   PIT_Flag_Clear(PIT1);       //清中断标志位
+   TIME1flag_1s = 1 ;
+   
 }
 
 /*************************************************************************
@@ -105,36 +102,34 @@ void PIT1_IRQHandler(void)
 
 void PIT0_IRQHandler(void)
 {
-  PIT_Flag_Clear(PIT0);       //清中断标志位
-  
-  TimeCount ++ ;
-  
-  if(TimeCount%5 == 0 )
-  {
-    TIME0flag_5ms = 1;
+   PIT_Flag_Clear(PIT0);       //清中断标志位
+   
+   TimeCount ++ ;
+
+  if(TimeCount%1 == 0 ){
+     TIME0flag_5ms = 1;
+
+ } 
+  if(TimeCount%2 == 0 ){
+     TIME0flag_10ms = 1;
+
   } 
-  if(TimeCount%10 == 0 )
-  {
-    TIME0flag_10ms = 1;
-  } 
-  if(TimeCount%20 == 0 )
-  {
-    TIME0flag_20ms = 1;
+  if(TimeCount%3 == 0 ){
+     TIME0flag_15ms = 1;
   }
-  if(TimeCount%80 == 0 )
-  {
-    TIME0flag_80ms = 1;
+  if(TimeCount%4 == 0 ){
+     TIME0flag_20ms = 1;
   }
-  if(TimeCount%100 == 0 )
+  if(TimeCount%40 == 0 ){
+     TIME0flag_200ms = 1;
+  }
+  
+  if(TimeCount == 120)
   {
-    TIME0flag_100ms = 1;
-  } 
-   if(TimeCount%200 == 0 )
-  {
-    TIME0flag_200ms = 1;
     TimeCount = 0 ;
-  } 
-  
+  }
+
+   
 }
 
 
@@ -151,9 +146,9 @@ void PIT0_IRQHandler(void)
 *************************************************************************/
 void SysTick_Handler(void)
 {
-  //    OSIntEnter();
-  //    OSTimeTick();
-  //    OSIntExit();
+    //    OSIntEnter();
+    //    OSTimeTick();
+    //    OSIntExit();
 }
 
 /*************************************************************************
@@ -181,10 +176,19 @@ void PendSV_Handler(void)
 *************************************************************************/
 void HardFault_Handler(void)
 {
-  while (1)
-  {
-    printf("\n****硬件上访错误!!!*****\r\n\n");
-  }
+        printf("\n****硬件上访错误!!!*****\r\n\n");
+        SendImage(ImgNew);
+        while(1);
+}
+
+/*****************************************************************
+* 函数说明：延时消除消隐区
+*************************************************************/
+void dlay(void)
+{
+    volatile uint16_t dlaycount;
+    for(dlaycount = 0; dlaycount < 125; dlaycount++)
+      ;
 }
 
 /*************************************************************************
@@ -198,126 +202,61 @@ void HardFault_Handler(void)
 *  备    注：引脚号需要自己初始化来清除
 *************************************************************************/
 
-void PORTD_IRQHandler()
-{
   
-  
-  
-  if(PORTD_ISFR & 0x0002)                     //PTD1触发中断,采集的场中断。
-  {
-    PORTD_ISFR  |= 0x0002;                   //写1清中断标志位
-    //uart_sendStr(UART0, (const u8*)"enter portD\n");
-    pSample_Line = Sample_LineAryy ;    //初始化要采集的行数
-    LineCount = 0 ;                         //清除摄像头行数
-    Sample_Line_Count = 0;
-    
-  }
-  
-}
-
-
-#ifdef TESTDMA
-uint8 DMA_Over_Flag = 0;
+/**************************
+摄像头采用变量
+***************************/
+u8  DMA_Over_Flg = 0 ;     //场采集完成标志位
+u16 LinCout =0;
+u16 LinADCout =0;
+u8 AcqFlg =0 ;
+u16 *linarrycot = 0;
+u16 AcqAryy[] = {0X110 ,0XFFFF ,0XFFFF};
+u16 makcout = 0 ;
 extern u8  BUFF[500] ;
-extern u8  DMA_Over_Flag ;
-extern u8  ADdata[DATAROW][DATACOUNT];
+extern u8  DMA_Over_Flg ;
+extern u8  ADdata[DATALINE][DATACOUNT];
 void PORTD_IRQHandler(){
-    
+    //BFdelay_1us(200);
     if(PORTD_ISFR & 0x0002)         //PTD1触发中断,采集的场中断。
     {
         PORTD_ISFR  |= 0x0002;        //写1清中断标志位
        
     //  uart_putchar(UART0,LinCout>>8);      //采样行数
-     //   uart_putchar(UART0,LinCout);         //采样行数
+     //   uart_putchar(UART0,LinCout);       //采样行数
       //uart_sendStr(UART0, (const u8*)"portDirq\n");
-        LineCount = 0 ;
-        Sample_Line_Count=0;
+        LinCout = 0 ;
+        LinADCout=0;
         gpio_Interrupt_init(PORTC,8, GPI_DOWN, RING) ;          //开启行中断         
     }
    
 }
-#endif
-
-
-
-uint8  DMA_Over_Flag = 0 ;     //行采集完成标志位
-extern uint8 ADdata[DATAROW][DATACOUNT];
+u16 delaytime = 0;
 void PORTC_IRQHandler()
 {
-  if(PORTC_ISFR & 0x0100)                                 //PTC8触发中断，采集的行中断
-  {
-    PORTC_ISFR  |= 0x0100;                              //写1清中断标志位  
-    DMA_IRQ_CLEAN(DMA_CH4); 
-    
-    LineCount++;                                //统计到目前为止扫描了几行
-    if(*pSample_Line == LineCount )             //如果扫描的行是我们需要采集的行，置标志位
-    {         
-      Sample_Line_flag = 1 ;
-      if(*pSample_Line != 0xFFff )
-      {
-        pSample_Line++;
-      }
-    }
-        if(Sample_Line_flag)
-    {       
-      Sample_Line_flag = 0;  
-          
-      DMA_DADDR(CH4) = (u32)(&ADdata[Sample_Line_Count][0]);                         //清除通道传输中断标志位    (这样才能再次进入中断)
-      DMA_EN(DMA_CH4);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输) 
-      DMA_IRQ_EN(DMA_CH4) ;                              //允许DMA通道传输
-      
-      Sample_Line_Count ++ ;                             //采样行数 
-      
-      
-    }
-      //if(Sample_Line_Count == DATAROW)
-        //DMA_Over_Flag = 1 ; 
-  }
-}
-/*
-void PORTC_IRQHandler()
-{
+      //BFdelay_1us(100);
         if(PORTC_ISFR & 0x0100)            //PTC8触发中断，采集的行中断
     { 
         PORTC_ISFR  |= 0x0100;         //写1清中断标志位
-        LineCount ++ ; 
+        LinCout ++ ; 
         DMA_IRQ_CLEAN(DMA_CH4);                             //清除通道传输中断标志位    (这样才能再次进入中断)
-        if((LineCount%(480/DATAROW)==0)&&(Sample_Line_Count<DATAROW))
+        if((LinCout%(480/DATALINE)==0)&&(LinADCout<DATALINE))
         {
-          DMA_DADDR(CH4) = (u32)(&ADdata[ Sample_Line_Count][0]);
+          for(int i = 0; i < delaytime; i++);
+          DMA_DADDR(CH4) = (u32)(&ADdata[ LinADCout][0]);
           DMA_EN(DMA_CH4);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输) 
           DMA_IRQ_EN(DMA_CH4) ;                             //允许DMA通道传输
         //  PTA16_OUT = ~PTA16_OUT ;
-         Sample_Line_Count++ ;
+          LinADCout ++ ;
         }
       
-         if(Sample_Line_Count == DATAROW)
-        DMA_Over_Flag = 1 ;
+         if(LinADCout==DATALINE)
+         {
+            DMA_Over_Flg = 1 ;
+            //gpio_Interrupt_init(PORTC,8, GPI_DOWN, GPI_DISAB) ;          //行中断
+         }
     }
 }
-*/
-#ifdef TESTDMA
-void PORTC_IRQHandler()
-{
-        if(PORTC_ISFR & 0x0100)            //PTC8触发中断，采集的行中断
-    { 
-        PORTC_ISFR  |= 0x0100;         //写1清中断标志位
-        LineCount ++ ; 
-        DMA_IRQ_CLEAN(DMA_CH4);                             //清除通道传输中断标志位    (这样才能再次进入中断)
-        if((LineCount%(480/DATAROW)==0)&&(Sample_Line_Count<DATAROW))
-        {
-          DMA_DADDR(CH4) = (u32)(&ADdata[Sample_Line_Count][0]);
-          DMA_EN(DMA_CH4);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输) 
-          DMA_IRQ_EN(DMA_CH4) ;                             //允许DMA通道传输
-        //  PTA16_OUT = ~PTA16_OUT ;
-         Sample_Line_Count ++ ;
-        }
-      
-         if(Sample_Line_Count==DATAROW)
-        DMA_Over_Flag = 1 ;
-    }
-}
-#endif
 
 /*************************************************************************
 *                             蓝宙电子工作室
@@ -331,28 +270,64 @@ void PORTC_IRQHandler()
 *************************************************************************/
 void PORTB_IRQHandler()
 {
-  
+    
   //  PORT_PCR_REG(PORTB , 10) |= PORT_PCR_ISF(1);
-  uint8  n = 0;    //引脚号
-  n = 0;
-  if(PORTB_ISFR & (1 << n))         //PTB0触发中断
-  {
-    PORTB_ISFR  |= (1 << n);        //写1清中断标志位
-    /*  用户任务  */
-    
-  }
-  
-  n = 10;
-  if(PORTB_ISFR & (1 << n))         //PTB10触发中断
-  {
-    PORTB_ISFR  |= (1 << n);        //写1清中断标志位
-    /*  用户任务  */
-    
-    
-    
-  }
+    u8  n = 0;    //引脚号
+    n = 0;
+    if(PORTB_ISFR & (1 << n))         //PTB0触发中断
+    {
+        PORTB_ISFR  |= (1 << n);        //写1清中断标志位
+        /*  用户任务  */
+
+    }
+
+    n = 10;
+    if(PORTB_ISFR & (1 << n))         //PTB10触发中断
+    {
+        PORTB_ISFR  |= (1 << n);        //写1清中断标志位
+        /*  用户任务  */
+
+
+
+    }
 }
 
+void PORTE_IRQHandler()
+{
+	//  PORT_PCR_REG(PORTE, 10) |= PORT_PCR_ISF(1);
+    u8  n = 0;    //引脚号
+	u8	State = 0;		//用于判断拨码开关的状态，4位二进制，1、2、3、4位从高到低
+
+	gpio_Interrupt_init(PORTE, 1, GPI_DOWN, GPI_DISAB);
+    n = 1;
+    if(PORTE_ISFR & (1 << n))			//PTE1触发中断
+	{
+		PORTE_ISFR  |= (1 << n);		//写1清中断标志位
+		if (gpio_get(PORTE, 6) == 1)	State += 8;
+		if (gpio_get(PORTE, 7) == 1)	State += 4;
+		if (gpio_get(PORTE, 8) == 1)	State += 2;
+		if (gpio_get(PORTE, 9) == 1)	State += 1;
+		SpeedSp = State * 7;
+		if (SpeedSp > 100)	SpeedSp = 100;	//对速度的设定值进行限位，最终保证在0-100
+	}
+	else if(PORTE_ISFR & (1 << 2))		//K3触发中断
+	{
+		PORTE_ISFR  |= (1 << 2);
+		DirectionErrorMan ++;
+		if (DirectionErrorMan > 50)	DirectionErrorMan = 50;
+		printf("DirectionErrorMan = %d\n", DirectionErrorMan);
+	}
+	else if(PORTE_ISFR & (1 << 3))		//K4触发中断
+	{
+		PORTE_ISFR  |= (1 << 3);
+		DirectionErrorMan --;
+		if (DirectionErrorMan < -50)	DirectionErrorMan = -50;
+		printf("DirectionErrorMan = %d\n", DirectionErrorMan);
+	}
+	delayms(20);
+	//printf("State = %d\n", State);
+	gpio_Interrupt_init(PORTE, 1, GPI_DOWN, RING);
+}
 
 /*************************************************************************
 *                             蓝宙嵌入式开发工作室
@@ -367,9 +342,8 @@ void PORTB_IRQHandler()
 
 void PIT2_IRQHandler(void)
 {
-  PIT_Flag_Clear(PIT2);       //清中断标志位
-  
-  
+   PIT_Flag_Clear(PIT2);       //清中断标志位
+   
 }
 /*************************************************************************
 *                             蓝宙电子工作室
@@ -383,8 +357,8 @@ void PIT2_IRQHandler(void)
 *************************************************************************/
 void FTM0_IRQHandler()
 {
-  
-  
+
+
 }
 
 /*************************************************************************
@@ -399,43 +373,69 @@ void FTM0_IRQHandler()
 *************************************************************************/
 void FTM1_IRQHandler()
 {
-  uint8 s = FTM1_STATUS;             //读取捕捉和比较状态  All CHnF bits can be checked using only one read of STATUS.
-  uint8 n;
-  FTM1_STATUS = 0x00;               //清中断标志位
-  
-  n = 0;
-  if( s & (1 << n) )
-  {
-    FTM_CnSC_REG(FTM1_BASE_PTR, n) &= ~FTM_CnSC_CHIE_MASK; //禁止输入捕捉中断
-    /*     用户任务       */
-    
-    printf("\nFTM1发送中断\n");
-    
-    /*********************/
-    //不建议在这里开启输入捕捉中断，而是在main函数里根据需要来开启
-    //通道 CH0、CH1、Ch2、Ch3 有滤波器
-    //FTM_CnSC_REG(FTM1_BASE_PTR,n) |= FTM_CnSC_CHIE_MASK;  //开启输入捕捉中断
-    //delayms(10);        //因为输入的信号跳变过程不稳定，容易触发多次输入捕捉，所以添加延时
-    //但考虑到中断不应该过长延时，所以开输入捕捉中断就放在main函数里，根据需要来开启
-  }
-  
-  n = 1;
-  if( s & (1 << n) )
-  {
-    FTM_CnSC_REG(FTM1_BASE_PTR, n) &= ~FTM_CnSC_CHIE_MASK; //禁止输入捕捉中断
-    /*     用户任务       */
-    
-    
-    /*********************/
-    //不建议在这里开启输入捕捉中断
-    //FTM_CnSC_REG(FTM1_BASE_PTR,n) |= FTM_CnSC_CHIE_MASK;  //开启输入捕捉中断
-  }
-  
+    u8 s = FTM1_STATUS;             //读取捕捉和比较状态  All CHnF bits can be checked using only one read of STATUS.
+    u8 n;
+    FTM1_STATUS = 0x00;               //清中断标志位
+
+    n = 0;
+    if( s & (1 << n) )
+    {
+        FTM_CnSC_REG(FTM1_BASE_PTR, n) &= ~FTM_CnSC_CHIE_MASK; //禁止输入捕捉中断
+        /*     用户任务       */
+
+        printf("\nFTM1发送中断\n");
+
+        /*********************/
+        //不建议在这里开启输入捕捉中断，而是在main函数里根据需要来开启
+        //通道 CH0、CH1、Ch2、Ch3 有滤波器
+        //FTM_CnSC_REG(FTM1_BASE_PTR,n) |= FTM_CnSC_CHIE_MASK;  //开启输入捕捉中断
+        //delayms(10);        //因为输入的信号跳变过程不稳定，容易触发多次输入捕捉，所以添加延时
+        //但考虑到中断不应该过长延时，所以开输入捕捉中断就放在main函数里，根据需要来开启
+    }
+
+    n = 1;
+    if( s & (1 << n) )
+    {
+        FTM_CnSC_REG(FTM1_BASE_PTR, n) &= ~FTM_CnSC_CHIE_MASK; //禁止输入捕捉中断
+        /*     用户任务       */
+
+
+        /*********************/
+        //不建议在这里开启输入捕捉中断
+        //FTM_CnSC_REG(FTM1_BASE_PTR,n) |= FTM_CnSC_CHIE_MASK;  //开启输入捕捉中断
+    }
+
 }
 
 
+/*************************************************************************
+*                             蓝宙电子工作室
+*
+*  函数名称：FTM2_IRQHandler
+*  功能说明：FTM2输入捕捉中断服务函数
+*
+*************************************************************************/
+void FTM2_IRQHandler()
+{
+    //u8 s = FTM2_STATUS;             //读取捕捉和比较状态  All CHnF bits can be checked using only one read of STATUS.
+    FTM2_STATUS = 0x00;               //清中断标志位
+    
+        FTM_CnSC_REG(FTM2_BASE_PTR, 0) &= ~FTM_CnSC_CHIE_MASK; //禁止输入捕捉中断
+        /*     用户任务       */
 
-volatile uint8  pit_flag = 0;
+        //printf("\nFTM2发送中断\n");
+        CountTemp++;
+        //printf("Into FTM2_IRQ: CountTemp = %d\n", CountTemp);
+        //printf("%d\t", CountTemp++);
+
+        /*********************/
+        //不建议在这里开启输入捕捉中断，而是在main函数里根据需要来开启
+        FTM_CnSC_REG(FTM2_BASE_PTR,0) |= FTM_CnSC_CHIE_MASK;  //开启输入捕捉中断
+        //delayms(10);        //因为输入的信号跳变过程不稳定，容易触发多次输入捕捉，所以添加延时
+        //但考虑到中断不应该过长延时，所以开输入捕捉中断就放在main函数里，根据需要来开启
+}
+
+volatile u8  pit_flag = 0;
 volatile u32 dma_int_count = 0;
 
 
@@ -444,8 +444,8 @@ volatile u32 dma_int_count = 0;
 *
 *  函数名称：DMA_CH4_Handler
 *  功能说明：DMA通道4的中断服务函数
-*  参数说明：是采集摄像头数据，本数据位摄像头AD数据，可以采集到300个点。
-设置标志位能够及时搬移。
+*  参数说明：是采集摄像头数据，本数据为摄像头AD数据，可以采集到300个点。
+             设置标志位能够及时搬移。
 *  函数返回：无
 *  修改时间：2012-3-18    已测试
 *  备    注：
@@ -454,12 +454,13 @@ volatile u32 dma_int_count = 0;
 void DMA_CH4_Handler(void)
 {
   //DMA通道4
-  //uart_sendStr(UART0, (const u8*)"enter DMA_CH4\n");
-  DMA_IRQ_CLEAN(DMA_CH4) ;
-  DMA_IRQ_DIS(DMA_CH4);
-  DMA_DIS(DMA_CH4);
-  DMA_Over_Flag = 1 ;         
-  
+
+  //  PTA16_OUT = ~PTA16_OUT ;
+    DMA_IRQ_DIS(DMA_CH4);
+    DMA_IRQ_CLEAN(DMA_CH4) ;
+    DMA_DIS(DMA_CH4);
+   //uart_sendStr(UART0, (const u8*)"DMA4irq\n");
+ 
 }
 
 /*************************************************************************
@@ -468,36 +469,26 @@ void DMA_CH4_Handler(void)
 *  函数名称：DMA_CH4_Handler
 *  功能说明：DMA通道4的中断服务函数
 *  参数说明：是采集摄像头数据，本数据位摄像头AD数据，可以采集到300个点。
-设置标志位能够及时搬移。
+             设置标志位能够及时搬移。
 *  函数返回：无
 *  修改时间：2012-3-18    已测试
 *  备    注：
 *************************************************************************/
 void DMA_CH0_Handler(void)
 {
-  
-  //DMA通道0
-  printf("DMA_CH0_Handler\n");
-  DMA_IRQ_CLEAN(DMA_CH0);                             //清除通道传输中断标志位    (这样才能再次进入中断)
-  DMA_EN(DMA_CH0);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输)
+
+    //DMA通道0
+    printf("DMA_CH0_Handler\n");
+    DMA_IRQ_CLEAN(DMA_CH0);                             //清除通道传输中断标志位    (这样才能再次进入中断)
+    DMA_EN(DMA_CH0);                                    //使能通道CHn 硬件请求      (这样才能继续触发DMA传输)
   //   uart_putchar(UART0,0XAA);
 }
 
 
-/*************************************************************************
-*                             蓝宙电子工作室
-*
-*  函数名称：LPT_Handler
-*  功能说明：LPT通道4的中断服务函数
-*  参数说明：
-*  函数返回：无
-*  修改时间：2012-3-18    已测试
-*  备    注：
-*************************************************************************/
 
-volatile uint8 LPT_INT_count = 0;
+volatile u8 LPT_INT_count = 0;
 void  LPT_Handler(void)
 {
-  LPTMR0_CSR |= LPTMR_CSR_TCF_MASK;   //清除LPTMR比较标志
-  LPT_INT_count++;                    //中断溢出加1
+    LPTMR0_CSR |= LPTMR_CSR_TCF_MASK;   //清除LPTMR比较标志
+    LPT_INT_count++;                    //中断溢出加1
 }
