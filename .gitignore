@@ -1,4 +1,8 @@
 build
 settings
+<<<<<<< HEAD
 *.eww
+=======
+#*.eww
+>>>>>>> parent of 3ed2365... build and setting
 *.zip
