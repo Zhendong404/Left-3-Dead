@@ -318,8 +318,8 @@ void WBDefine(void)
 		for(j = 0; j < CameraWidth; j++)
 			Totallight += ImgNew[i][j];
 	Totallight = Totallight / (CameraHeight * CameraWidth);
-	WhitePoint = MaxRe(LimitWMIN, (uint8) Totallight * temp_W);
-	BlackPoint = MinRe(LimitBMAX, (uint8) Totallight * temp_B);
+	WhitePoint = MaxRe(LimitWMIN, (uint8) (Totallight * temp_W));
+	BlackPoint = MinRe(LimitBMAX, (uint8) (Totallight * temp_B));
 	BWDiff = MaxRe(LimitWBMIN, WhitePoint - BlackPoint);
 	/*for (i = 0; i < CameraHeight; i++)
 		for (j = 0; j < CameraWidth; j++)

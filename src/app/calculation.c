@@ -179,7 +179,7 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 {
 	//printf("Into DirectionPIDcontrol\n");
 	static s16 e0=0, e1=0, e2=0;
-	static u32 DutyStd = 50;
+	static s32 DutyStd = 50;
 	static u32 duty = 79;
 
 	e2 = DirectionError;
