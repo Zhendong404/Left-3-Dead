@@ -1,4 +1,4 @@
-#build
-#settings
-#*.eww
+build
+settings
+*.eww
 *.zip
