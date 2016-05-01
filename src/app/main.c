@@ -156,7 +156,7 @@ void main()
 		{
 			ImageProFlag = ImagePro();
 			Control();
-			//SendImage(ImgNew);
+			SendImage(ImgNew);
 			TIME0flag_200ms = 0;
 		}
 

@@ -157,7 +157,7 @@ s16 DirectionTransmitter()
 	if (DirectionError < -50)	DirectionError = -50;
 	if (DirectionError > 50)	DirectionError = 50;
 	//DirectionError =  DirectionErrorMan;
-        printf("\nErrorF = %d\tError1 = %d\tError2 = %d\tError = %d\tDirectionError = %d\tet = %d\n", ErrorF, Error1, Error2, Error, DirectionError, et);
+        //printf("\nErrorF = %d\tError1 = %d\tError2 = %d\tError = %d\tDirectionError = %d\tet = %d\n", ErrorF, Error1, Error2, Error, DirectionError, et);
         /*
         for(k=0; k<10; k++)
 	{
@@ -198,16 +198,16 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 	//DutyStd += (e2 - e1  + (e2 - 2 * e1 + e0)) * DirectionKc;
 	DutyStd = e2 + 50;
 	//printf("DirectionPIDcontrol: e2=%d, e1=%d, e0=%d\n", e2, e1, e0);
+        }
 	e0 = e1;
 	e1 = e2;
 	//printf("DutyStd = %ld\t", DutyStd);
-        }
 	//输出限位，限制在0-100标准信号
 	if (DutyStd > 100)	DutyStd = 100;
 	if (DutyStd < 0)	DutyStd = 0;
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
 	duty = DutyStd * 2 / 5 + 53;	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
-	printf("duty = %ld\n", duty);
+	//printf("duty = %ld\n", duty);
 
 	return duty;
 }
