@@ -236,7 +236,7 @@ void PORTD_IRQHandler(){
     }
    
 }
-u16 delaytime = 0;
+u16 delaytime = 335;
 void PORTC_IRQHandler()
 {
       //BFdelay_1us(100);
@@ -319,14 +319,16 @@ void PORTE_IRQHandler()
 	{
 		PORTE_ISFR  |= (1 << 2);
 		DirectionErrorMan ++;
-		if (DirectionErrorMan > 50)	DirectionErrorMan = 50;
+		delaytime ++;
+                if (DirectionErrorMan > 50)	DirectionErrorMan = 50;
 		printf("DirectionErrorMan = %d\n", DirectionErrorMan);
 	}
 	else if(PORTE_ISFR & (1 << 3))		//K4´¥·¢ÖÐ¶Ï
 	{
 		PORTE_ISFR  |= (1 << 3);
 		DirectionErrorMan --;
-		if (DirectionErrorMan < -50)	DirectionErrorMan = -50;
+		delaytime--;
+                if (DirectionErrorMan < -50)	DirectionErrorMan = -50;
 		printf("DirectionErrorMan = %d\n", DirectionErrorMan);
 	}
 	delayms(20);

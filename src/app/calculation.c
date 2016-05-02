@@ -185,7 +185,7 @@ s16 DirectionTransmitter()
 	//用加权平均计算总偏差
         //if(Error2 > Error22) Error = 16 * Error2;
 	//else Error = 16 * Error22;
-        Error = 8 * (Error1 + Error2);
+        Error = 6 * (Error1 + Error2);
         
 	//进行标准化，使偏差落在（-50，50）中，超出范围则直接忽略
 	DirectionError = Error * 2 / 3;
@@ -215,12 +215,21 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 	//printf("Into DirectionPIDcontrol\n");
 	static s16 e0=0, e1=0, e2=0;
 	static s32 DutyStd = 50;
-	static u32 duty = 79;
+	static u32 duty = 146;
+        static u32 dutysave[5];
+        static u32 count;
+        static u32 midduty;
+        static u32 sumduty;
 
 	e2 = DirectionError;
+        sumduty = dutysave[0] + dutysave[1] + dutysave[2] + dutysave[3] + dutysave[4];
+        midduty = sumduty / 5;
         if(e2<5 && e2>-5)
         {
-          duty = 73;
+          duty = 73 * 2;
+          if(count < 5) count++;
+          for(u8 i = 0; i < 3;i++)dutysave[i] = dutysave[i + 1];
+          dutysave[4] = duty;
           return duty;
         }
         if(e2-e1 <= 20 && e2 - e0 <= 20)
@@ -246,7 +255,18 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 	if (DutyStd > 100)	DutyStd = 100;
 	if (DutyStd < 0)	DutyStd = 0;
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
-	duty = DutyStd * 2 / 5 + 53;	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
+	duty = (DutyStd * 2 / 5 + 53) * 2;	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
+        if(count > 5)
+        {
+          if(duty - midduty < 15 || midduty - duty < 15)
+          {
+            if(count < 5) count++;
+            for(u8 i = 0; i < 3;i++)dutysave[i] = dutysave[i + 1];
+             dutysave[4] = duty;
+          }
+          else
+            duty = dutysave[4];
+        }
 	//printf("duty = %ld\n", duty);
 
 	return duty;
@@ -263,7 +283,7 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 ***********************************************************/
 void  TURNPWM_init(void)
 {
-	FTM_PWM_init(FTM1, CH0 , 50,75);                           //舵机占空比设置初始化   MOD =17361
+	FTM_PWM_init(FTM1, CH0 , 100,75);                           //舵机占空比设置初始化   MOD =17361
 	FTM_CnV_REG(FTMx[FTM1], CH0) = MIDSTRING ; 
 }
 
