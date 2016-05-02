@@ -3,6 +3,7 @@
 #include "include.h"
 #include "FTM.h"
 #include "calculation.h"
+#define CenterPosition 20
 
 s16 CountTemp;
 s16 Speed;
@@ -125,11 +126,11 @@ u32 SpeedPIcontrol(s16 Speed)
 s16 DirectionTransmitter()
 {
 	//printf("Into DirectionTransmitter\n");
-	static s16 Error, Error1, Error2, ErrorF, et, DirectionError;
+	static s16 Error1, Error2, Error11, Error22, ErrorF, Error, DirectionError;
 	u16 k;
         u8 count;
 	//第0行是最上面
-	//计算跑道中心的基准
+	//计算跑道中心与图像中心的基准偏差
 	ErrorF = 0;
         count = 0;
 	for(k=0; k<5; k++)
@@ -137,35 +138,61 @@ s16 DirectionTransmitter()
           if(CenterLine[40 + k] != NullValue){ ErrorF += CenterLine[40+k]; count++;}
 	}
         if(count != 0) ErrorF /= count;
-	//计算15至24行与基准的平均偏差
+        
+	//计算30至34行与基准的平均偏差
 	Error1 = 0;
         count = 0;
-	for(k=0; k<10; k++)
+	for(k=0; k<5; k++)
 	{
-          if(CenterLine[15 + k] != NullValue){ Error1 += (ErrorF - CenterLine[15+k]); count++;}
+          if(CenterLine[30 + k] != NullValue){ Error1 += (ErrorF - CenterLine[30+k]); count++;}
 	}
 	if(count != 0) Error1 /= count;
-	//计算20至29行与基准的平均偏差
+        
+        //计算30至34行与中心的平均偏差
+	Error11 = 0;
+        count = 0;
+	for(k=0; k<5; k++)
+	{
+          if(CenterLine[30 + k] != NullValue){ Error11 += (CenterPosition - CenterLine[30+k]); count++;}
+	}
+	if(count != 0) Error11 /= count;
+	
+        //计算35至39行与基准的平均偏差
 	Error2 = 0;
         count = 0;
-	for(k=0; k<10; k++)
+	for(k=0; k<5; k++)
 	{
           if(CenterLine[35 + k] != NullValue)
           {
-            et = CenterLine[35+k];
-            Error2 += (ErrorF - et);
+            Error2 += (ErrorF - CenterLine[35 + k]);
             count++;
           }
 	}
+        
+        //计算35至39行与中心的平均偏差
+	Error22 = 0;
+        count = 0;
+	for(k=0; k<5; k++)
+	{
+          if(CenterLine[35 + k] != NullValue)
+          {
+            Error22 += (CenterPosition - CenterLine[35 + k]);
+            count++;
+          }
+	}
+        
 	if(count != 0) Error2 /= count;
 	//用加权平均计算总偏差
-	Error = 16 * Error2;
+        //if(Error2 > Error22) Error = 16 * Error2;
+	//else Error = 16 * Error22;
+        Error = 8 * (Error1 + Error2);
+        
 	//进行标准化，使偏差落在（-50，50）中，超出范围则直接忽略
 	DirectionError = Error * 2 / 3;
 	if (DirectionError < -50)	DirectionError = -50;
 	if (DirectionError > 50)	DirectionError = 50;
 	//DirectionError =  DirectionErrorMan;
-        //printf("\nErrorF = %d\tError1 = %d\tError2 = %d\tError = %d\tDirectionError = %d\tet = %d\n", ErrorF, Error1, Error2, Error, DirectionError, et);
+        printf("\nErrorF = %lf\tError1 = %lf\tError2 = %lf\tError = %d\tDirectionError = %d\n", ErrorF, Error1, Error2, Error, DirectionError);
         /*
         for(k=0; k<10; k++)
 	{
@@ -191,6 +218,11 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 	static u32 duty = 79;
 
 	e2 = DirectionError;
+        if(e2<5 && e2>-5)
+        {
+          duty = 70;
+          return duty;
+        }
         if(e2-e1 <= 20 && e2 - e0 <= 20)
         {
 	//对偏差进行一个非线性的映射
@@ -214,7 +246,7 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 	if (DutyStd > 100)	DutyStd = 100;
 	if (DutyStd < 0)	DutyStd = 0;
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
-	duty = DutyStd / 2 + 53;	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
+	duty = DutyStd / 2 + 50;	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
 	//printf("duty = %ld\n", duty);
 
 	return duty;
