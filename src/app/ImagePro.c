@@ -12,6 +12,8 @@ Remark:		1.Begin this part 4.12
 					5.Add the MidFilter and AverageFilter 4.19
 					   Add the Pathjudge
 					6.Modify the boundlimit and the strategy of the centerline get
+					7.Modify the supplement's fatal error: overstack
+					8.Add the direction detect in both leftline and rightline 5.2
 ***************************************************************/
 /**************************************************************/
 
@@ -23,6 +25,8 @@ uint8 ImgNew[CameraHeight][CameraWidth];	//图片
 uint8 CenterLine[CameraHeight];						//中线
 uint8 LeftBlackLine[CameraHeight];					//左黑线
 uint8 RightBlackLine[CameraHeight];					//右黑线
+uint8 LeftDirectChange = 0;								//左边线检测时发现方向改变
+uint8 RightDirectChange = 0;								//右边线检测时发现方向转变
 
 //曲率计算
 uint8 CurveLineChosenC1 = 0;            	//曲率求取时，中心线选取的第1行
@@ -260,7 +264,7 @@ int16 SABCGet(uint8 AX, uint8 AY, uint8 BX, uint8 BY, uint8 CX, uint8 CY)
 
 
 //数据传输
-//#ifdef ImagePro_CarUse
+#ifdef ImagePro_CarUse
 
 void SendCenterLine(uint8 Line[CameraHeight]);						//发送中心线数据
 void SendImage(uint8 image[CameraHeight][CameraWidth]);	//发送图像
@@ -297,7 +301,7 @@ void SendImage(uint8 image[CameraHeight][CameraWidth])
 	uart_putchar(UART0, 255);
 }
 
-//#endif
+#endif
 
 //色彩判断
 void WBDefine(void);		//根据图片平均亮度确定更为准确的黑白阈值
@@ -787,7 +791,10 @@ uint8 LeftLineGet(void)							//获取左黑线
 	uint8 flag,flag_t;
 	uint8 backsuprow;							//若需要向后补线，记录线头
 	uint8 crosssuprow1, crosssuprow2;	//若需要十字补线，记录线头
-	uint8 GapCount = 0;							//记录连续未采集到黑线的数目，用于判定Cross
+	uint8 GapCount = 0;						//记录连续未采集到黑线的数目，用于判定Cross
+	uint8 LeftDirect = 0;						//方向记录
+	uint8 Directtemp = 0;					//初始方向计算
+	uint8	changerow = NullValue;			//方向改变行
 
 	backsuprow = NullValue;
 	crosssuprow1 = NullValue;
@@ -800,6 +807,10 @@ uint8 LeftLineGet(void)							//获取左黑线
 	}
 
 	row = temp;
+
+	if(LeftBlackLine[row] >= LeftBlackLine[row - 1]) Directtemp = 0;
+	else Directtemp = 1;
+
 	if(row < CameraHeight - BlackSweep_CrossLine)
 	{
 		//LeftBlackCross = 1;
@@ -812,7 +823,16 @@ uint8 LeftLineGet(void)							//获取左黑线
 		temp1 = LeftLineWin(row, temp);
 		temp2 = LeftLineWin(row - 1, temp);
 		if(temp1 && temp2)						//连续两行提取成功
+		{
 			temp = (LeftBlackLine[row] + LeftBlackLine[row - 1]) / 2;		//调整预测值
+			if(LeftBlackLine[row] >= LeftBlackLine[row - 1]) LeftDirect = 0;					//斜率向左
+			else LeftDirect = 1;											//斜率向右
+			if(LeftDirect != Directtemp)		//寻线过程中线的方向发生变化
+			{
+				LeftDirectChange = 1;
+				changerow = row + 2;
+			}
+		}	
 		else if(!temp1 && temp2)		//避免因预测错误而出现的错误
 		{
 			temp = (LeftBlackLine[row + 1] + LeftBlackLine[row - 1]) / 2;
@@ -842,12 +862,15 @@ uint8 LeftLineGet(void)							//获取左黑线
 			{
 				if(LeftBlackLine[row + 1] == NullValue || LeftBlackLine[row + 2] == NullValue)
 				{
-					if(GapCount == 0) crosssuprow1 = row + 3;
+					if(GapCount == 0 && ((LeftDirectChange == 0) || (LeftDirectChange == 1 && row < BlackSweep_MidLine))) 
+						crosssuprow1 = row + 3;
+					else if(GapCount == 0 && LeftDirectChange == 1) crosssuprow1 = changerow;
 					crosssuprow2 = row - 1;
 					GapCount += 2;
 				}	
 			}
 		}
+
 		if (row == 1) break;
 	}
 	if(GapCount >= BlackSweep_CrossGap) LeftBlackCross = 1;
@@ -1314,6 +1337,9 @@ uint8 RightLineGet(void)							//获取右黑线
 	uint8 backsuprow;							//若需要向后补线，记录线头
 	uint8 crosssuprow1, crosssuprow2;	//若需要十字补线，记录线头
 	uint8 GapCount = 0;							//记录连续未采集到黑线的数目，用于判定Cross
+	uint8 RightDirect = 0;						//方向记录
+	uint8 Directtemp = 0;					//初始方向计算
+	uint8 changerow = NullValue;			//方向改变行
 
 	backsuprow = NullValue;
 	crosssuprow1 = NullValue;
@@ -1326,6 +1352,10 @@ uint8 RightLineGet(void)							//获取右黑线
 	}
 
 	row = temp;
+		
+	if(RightBlackLine[row] >= RightBlackLine[row - 1]) Directtemp = 0;
+	else Directtemp = 1;
+
 	if(row < CameraHeight - BlackSweep_CrossLine)
 	{
 		//RightBlackCross = 1;
@@ -1333,12 +1363,23 @@ uint8 RightLineGet(void)							//获取右黑线
 	}
 
 	temp = (RightBlackLine[row] + RightBlackLine[row - 1]) / 2;
+	
 	for(row -= 2; row > 0; row -= 2)
 	{
 		temp1 = RightLineWin(row, temp);
 		temp2 = RightLineWin(row - 1, temp);
 		if(temp1 && temp2)					//连续两行提取成功
+		{
 			temp = (RightBlackLine[row] + RightBlackLine[row - 1]) / 2;		//调整预测值
+			if(RightBlackLine[row] >= RightBlackLine[row - 1]) RightDirect = 0;					//斜率向左
+			else RightDirect = 1;											//斜率向右
+			if(RightDirect != Directtemp)								//寻线过程中线的方向发生变化
+			{
+				RightDirectChange = 1;
+				changerow = row + 2;
+			}
+		}	
+			
 		else if(!temp1 && temp2)		//避免因预测错误而出现的错误
 		{
 			temp = (RightBlackLine[row + 1] + RightBlackLine[row - 1]) / 2;
@@ -1368,7 +1409,9 @@ uint8 RightLineGet(void)							//获取右黑线
 			{
 				if (RightBlackLine[row + 1] == NullValue || RightBlackLine[row + 2] == NullValue)
 				{
-					if (GapCount == 0) crosssuprow1 = row + 3;
+					if(GapCount == 0 && ((RightDirectChange == 0) || (RightDirectChange == 1 && row < BlackSweep_MidLine))) 
+						crosssuprow1 = row + 3;
+					else if(GapCount == 0 && RightDirectChange == 1) crosssuprow1 = changerow;
 					crosssuprow2 = row - 1;
 					GapCount += 2;
 				}
@@ -2080,7 +2123,7 @@ void ImagePut(void)
 {
 	uint8 row;
 	uint8 col;
-//#ifdef ImagePro_CarUse
+#ifdef ImagePro_CarUse
 	for(row = 0; row < CameraHeight; row++)
 	{
 		for(col = 0; col < CameraWidth; col++)
@@ -2088,7 +2131,7 @@ void ImagePut(void)
 			ImgNew[row][col] = ADdata[row][col];		//ImgRaw外部定义，定义为从摄像头原始采集到的图像
                   else ImgNew[row][col] = ADdata[row][col] - 1;
 	}
-//#endif
+#endif
 }
 
 /**************************************************************
@@ -2105,7 +2148,7 @@ uint8 ImagePro(void)
 	if(CenterLineDone)
 	{
 		//PathJudge();
-#ifdef ImagePro_PCUse
+//#ifdef ImagePro_PCUse
 		
 		for (int i = 0; i < CameraHeight; i++)
 		{
@@ -2140,7 +2183,7 @@ uint8 ImagePro(void)
 		//	printf("\n");
 		}
 		
-#endif
+//#endif
 		return 1;
 	}
 	return 0;

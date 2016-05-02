@@ -19,9 +19,12 @@ Remark:		1.Begin this part 4.12
 
 //1.Header
 #include <stdio.h>
+
+#ifdef ImagePro_CarUse
 #include "common.h"
 #include "calculation.h"
 #include "uart.h"
+#endif
 
 //2.Macro Definition
 //图像尺寸设定
@@ -54,20 +57,20 @@ Remark:		1.Begin this part 4.12
 #define temp_B 0.69					//基于亮度中值判断黑白判定的范围系数
 #define temp_W 1.01					//基于亮度中值判断黑白判定的范围系数
 
-//#ifdef ImagePro_PCUse
-//#define UART0 1;
-//#define ImgRaw ImgNew;
-//typedef unsigned char uint8;
-//typedef unsigned long int uint32;
-//typedef unsigned short int uint16;
-//typedef char int8;
-//typedef short int int16;
-//typedef int int32;
-//#endif
+#ifdef ImagePro_PCUse
+#define UART0 1;
+#define ImgRaw ImgNew;
+typedef unsigned char uint8;
+typedef unsigned long int uint32;
+typedef unsigned short int uint16;
+typedef char int8;
+typedef short int int16;
+typedef int int32;
+#endif
 
 //3.Variables
 //数据记录
-extern u8 ADdata[CameraHeight][CameraWidth];	//图片
+extern uint8 ADdata[CameraHeight][CameraWidth];	//图片
 extern uint8 CenterLine[CameraHeight];						//中线
 extern uint8 LeftBlackLine[CameraHeight];					//左黑线
 extern uint8 RightBlackLine[CameraHeight];					//右黑线
