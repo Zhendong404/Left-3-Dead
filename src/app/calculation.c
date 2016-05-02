@@ -127,29 +127,37 @@ s16 DirectionTransmitter()
 	//printf("Into DirectionTransmitter\n");
 	static s16 Error, Error1, Error2, ErrorF, et, DirectionError;
 	u16 k;
+        u8 count;
 	//第0行是最上面
 	//计算跑道中心的基准
 	ErrorF = 0;
+        count = 0;
 	for(k=0; k<5; k++)
 	{
-		ErrorF += CenterLine[40+k];
+          if(CenterLine[40 + k] != NullValue){ ErrorF += CenterLine[40+k]; count++;}
 	}
-	ErrorF /= 5;
+        if(count != 0) ErrorF /= count;
 	//计算15至24行与基准的平均偏差
 	Error1 = 0;
+        count = 0;
 	for(k=0; k<10; k++)
 	{
-		Error1 += (ErrorF - CenterLine[15+k]);
+          if(CenterLine[15 + k] != NullValue){ Error1 += (ErrorF - CenterLine[15+k]); count++;}
 	}
-	Error1 /= 10;
+	if(count != 0) Error1 /= count;
 	//计算20至29行与基准的平均偏差
 	Error2 = 0;
+        count = 0;
 	for(k=0; k<10; k++)
 	{
-          et = CenterLine[35+k];
-		Error2 += (ErrorF - et);
+          if(CenterLine[35 + k] != NullValue)
+          {
+            et = CenterLine[35+k];
+            Error2 += (ErrorF - et);
+            count++;
+          }
 	}
-	Error2 /= 10;
+	if(count != 0) Error2 /= count;
 	//用加权平均计算总偏差
 	Error = 16 * Error2;
 	//进行标准化，使偏差落在（-50，50）中，超出范围则直接忽略

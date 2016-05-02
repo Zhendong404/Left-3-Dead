@@ -871,6 +871,10 @@ uint8 LeftLineGet(void)							//获取左黑线
 	}
 
 	if(flag) LeftBlackDone = 1;
+        for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//中值滤波
+		LeftBlackLine[row] = MidFilter(&LeftBlackLine[row - MidPronum / 2]);
+	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//均值滤波
+		LeftBlackLine[row] = AverageFilter(&LeftBlackLine[row - MidPronum / 2]);
 
 	return LeftBlackDone;
 }
@@ -1394,7 +1398,10 @@ uint8 RightLineGet(void)							//获取右黑线
 	}
 
 	if(flag) RightBlackDone = 1;
-
+	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//中值滤波
+		RightBlackLine[row] = MidFilter(&RightBlackLine[row - MidPronum / 2]);
+	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//均值滤波
+		RightBlackLine[row] = AverageFilter(&RightBlackLine[row - MidPronum / 2]);
 	return RightBlackDone;
 }
 
@@ -1760,9 +1767,21 @@ uint8 CenterLineGet(void)					//中心线提取
 			}
 			//这里应该可以继续优化算法来纠正错误-by_mxl
 		}
+                if(CenterLine[row + 2] != NullValue)
+                {
+                  if(CenterLine[row] != NullValue && AbsNum(CenterLine[row] - CenterLine[row + 2]) <= BlackSweep_Cont * 2) continue;
+                  if(CenterLine[row + 1] != NullValue && AbsNum(CenterLine[row + 1] - CenterLine[row + 2]) <= BlackSweep_Cont) continue;
+                  else
+                  {
+                    CenterLine[row] = NullValue;
+                    CenterLine[row + 1] = NullValue;
+                    FailCount++;
+                    FailCount++;
+                  }
+                }
 	}
 
-	if(FailCount >= CameraHeight - 5)			//错误点数过多
+	if(FailCount >= CameraHeight - 15)			//错误点数过多
 	{
 #ifdef ImagePro_CarUse
 		uart_sendN(UART0, (uint8 *)"\nCenterline get fails!\n", 23);

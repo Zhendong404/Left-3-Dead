@@ -37,6 +37,7 @@ u8 TIME0flag_5ms  = 0 ;
 u8 TIME0flag_10ms = 0 ;
 u8 TIME0flag_15ms = 0 ;
 u8 TIME0flag_20ms = 0 ;
+u8 TIME0flag_50ms = 0 ;
 u8 TIME0flag_200ms = 0 ; 
 u8 TIME1flag_1s   = 0 ;
 u8  TimeCount = 0 ;
@@ -119,6 +120,10 @@ void PIT0_IRQHandler(void)
   }
   if(TimeCount%4 == 0 ){
      TIME0flag_20ms = 1;
+  }
+  if(TimeCount%10 == 0 )
+  {
+    TIME0flag_50ms = 1;
   }
   if(TimeCount%40 == 0 ){
      TIME0flag_200ms = 1;

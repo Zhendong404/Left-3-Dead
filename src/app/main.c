@@ -36,6 +36,7 @@ extern u8 TIME0flag_5ms   ;
 extern u8 TIME0flag_10ms  ;
 extern u8 TIME0flag_15ms  ;
 extern u8 TIME0flag_20ms  ;
+extern u8 TIME0flag_50ms;
 extern u8 TIME0flag_200ms  ;
 extern u8 TIME1flag_1s ;
 
@@ -136,41 +137,42 @@ void main()
 		/*********************
 		10ms程序执行代码段
 		*********************/
-		if(DMA_Over_Flg == 1)
+		/*if(DMA_Over_Flg == 1)
                 {
                    // ImageProFlag = ImagePro();
-                }
+                }*/
                 
-		if(TIME0flag_10ms == 1)
+		//if(TIME0flag_10ms == 1)
 		{
 			SpeedTransmitter();
 			//printf("Speed = %d\n", Speed);
-			TIME0flag_10ms = 0;
+		//	TIME0flag_10ms = 0;
 		}
 		
 
 		/*********************
 		200ms程序执行代码段
 		*********************/
-		if(TIME0flag_200ms == 1)
+		//if(TIME0flag_50ms == 1)
 		{
 			ImageProFlag = ImagePro();
 			Control();
-			SendImage(ImgNew);
-			TIME0flag_200ms = 0;
+                        PTA17_OUT = ~PTA17_OUT ;
+			SendImage(ADdata);
+		//	TIME0flag_50ms = 0;
 		}
 
 		/*********************
 		1s程序执行代码段
 		*********************/      
-		if(TIME1flag_1s == 1)
+		//if(TIME1flag_1s == 1)
 		{
 		//5.7% 为下限，右转。
 		//7.3% 为中心，直走。
 		//8.7% 为上限，左转。
-        PTA17_OUT = ~PTA17_OUT ;
+        //PTA17_OUT = ~PTA17_OUT ;
         //uart_putchar(UART0, 'c');
-        TIME1flag_1s = 0 ; 
+        //TIME1flag_1s = 0 ; 
 		}
 	}
 }
