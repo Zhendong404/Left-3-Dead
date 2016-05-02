@@ -214,7 +214,7 @@ u32 DirectionPIDcontrol(s16 DirectionError)
 	if (DutyStd > 100)	DutyStd = 100;
 	if (DutyStd < 0)	DutyStd = 0;
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
-	duty = DutyStd * 2 / 5 + 53;	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
+	duty = DutyStd / 2 + 53;	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
 	//printf("duty = %ld\n", duty);
 
 	return duty;

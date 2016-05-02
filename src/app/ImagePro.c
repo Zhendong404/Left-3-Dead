@@ -2105,7 +2105,7 @@ uint8 ImagePro(void)
 	if(CenterLineDone)
 	{
 		//PathJudge();
-//#ifdef ImagePro_PCUse
+#ifdef ImagePro_PCUse
 		
 		for (int i = 0; i < CameraHeight; i++)
 		{
@@ -2140,7 +2140,7 @@ uint8 ImagePro(void)
 		//	printf("\n");
 		}
 		
-//#endif
+#endif
 		return 1;
 	}
 	return 0;

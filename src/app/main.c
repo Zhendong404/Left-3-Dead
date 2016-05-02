@@ -158,7 +158,7 @@ void main()
 			ImageProFlag = ImagePro();
 			Control();
                         PTA17_OUT = ~PTA17_OUT ;
-			SendImage(ADdata);
+			//SendImage(ImgNew);
 		//	TIME0flag_50ms = 0;
 		}
 
