@@ -18,9 +18,9 @@
 #include "RunControl.h"
 
 //#define  NORMAL
-#define  IMAGEGET
+//#define  IMAGEGET
 //#define  REG_VALUE_GET
-//#define  RUN
+#define  RUN
 
 /*************************
 设置系统的全局变量
