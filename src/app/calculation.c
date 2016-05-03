@@ -7,11 +7,13 @@
 
 //#define DebugSpeed
 //#define DebugDirection
+//#define AutoSpeed
 
 s16 CountTemp;
 s16 Speed;
-s16 SpeedKc = 3;
-s16 SpeedSp = 30;
+float SpeedKc = 3.0f;
+s16 SpeedSp = 10;
+float SI = 1.0f;//速度控制中的积分作用强弱，越大越强
 
 extern uint8 CenterLine[CameraHight];      //中心线位置存储数组, 255为无效值
 s16 DirectionKc = 2;
@@ -88,32 +90,33 @@ u32 SpeedPIcontrol(s16 Speed)
 {
 	//printf("Into SpeedPIcontrol\n");
 	static s16 e0=0, e1=0;
-	static s32 DutyStd = 50;
+	static float DutyStd = 50;
 	static u32 duty = 150;
-        //printf("SC: Speed = %d\n", Speed);
+	//printf("SC: Speed = %d\n", Speed);
 	e1 = SpeedSp - Speed;
-		if (e1 < 3 && e1>-3)
-		{
-			#ifdef DebugSpeed
-			printf("SpeedPIcontrol: duty = %ld, SpeedSp = %d, Speed = %d, e1 = %d, e0 = %d\n", duty, SpeedSp, Speed, e1, e0);
-			#endif
-			duty = DutyStd + 100;
-			return duty;
-        }
+	if (e1 < 5 && e1>-5)
+	{
+		#ifdef DebugSpeed
+		printf("SpeedPIcontrol: duty = %ld, SpeedSp = %d, Speed = %d, e1 = %d, e0 = %d\n", duty, SpeedSp, Speed, e1, e0);
+		#endif
+		duty = (u32)DutyStd + 100;
+		return duty;
+    }
 	/*
 	实际的PI算法应该是这样
 	delta = SpeedKc * (e1 - e0 + Ts/Ti*e1);
 	DutyStd += delta;
 	其中Ts=200ms，Ti=195ms，则Ts/Ti≈1
 	*/
-	DutyStd += (2 * e1 - e0) / SpeedKc;
+	DutyStd += SpeedKc * (e1 + SI * (e1 - e0));
 	
 	e0 = e1;
+
 	//输出限位，限制在0-100标准信号
 	if (DutyStd >100)	DutyStd = 100;
 	if (DutyStd <0)		DutyStd = 0;
 
-	duty = DutyStd + 100;	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
+	duty = (u32)(DutyStd + 100);	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
 	
 	#ifdef DebugSpeed
 	printf("SpeedPIcontrol: duty = %ld, SpeedSp = %d, Speed = %d, e1 = %d, e0 = %d\n", duty, SpeedSp, Speed, e1, e0);
@@ -134,6 +137,7 @@ float DirectionTransmitter()
 {
 	//printf("Into DirectionTransmitter\n");
 	static float Error1, Error2, ErrorF, Error, DirectionError;
+	static float ErrorS; //用于速度控制的偏差，计算时取比较靠上的行
 
 	u16 k;
 	u8 count;
@@ -147,6 +151,20 @@ float DirectionTransmitter()
 		if(CenterLine[40 + k] != NullValue){ ErrorF += CenterLine[40+k]; count++;}
 	}
 	if(count != 0) ErrorF /= count;
+
+	//计算15至24行与基准的平均偏差，用于速度控制
+	ErrorS = 0;
+	count = 0;
+	for(k=0; k<10; k++)
+	{
+		if(CenterLine[15 + k] != NullValue){ ErrorS += (ErrorF - CenterLine[30+k]); count++;}
+	}
+	if(count != 0) ErrorS /= count;
+	#ifdef AutoSpeed
+	if (ErrorS >= 20)		SpeedSp = 15;
+	else if (ErrorS <= 5)	SpeedSp = 60;
+	else					SpeedSp = 75 - 3 * ErrorS;
+	#endif
         
 	//计算30至39行与基准的平均偏差
 	Error1 = 0;

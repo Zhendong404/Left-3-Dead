@@ -7,7 +7,8 @@
 extern  s16 CountTemp;
 extern  s16 Speed;
 extern	s16 SpeedSp;
-extern	s16 SpeedKc;
+extern	float SpeedKc;
+extern	float SI;
 extern  s16 DirectionKc;
 extern float DirectionErrorMan;
 extern u8 ImageProFlag;
