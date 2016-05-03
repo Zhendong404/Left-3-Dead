@@ -321,7 +321,7 @@ void PORTE_IRQHandler()
 		DirectionErrorMan ++;
 		delaytime ++;
                 if (DirectionErrorMan > 50)	DirectionErrorMan = 50;
-		printf("DirectionErrorMan = %d\n", DirectionErrorMan);
+		printf("DirectionErrorMan = %d\n", (s16)DirectionErrorMan);
 	}
 	else if(PORTE_ISFR & (1 << 3))		//K4´¥·¢ÖÐ¶Ï
 	{
@@ -329,7 +329,7 @@ void PORTE_IRQHandler()
 		DirectionErrorMan --;
 		delaytime--;
                 if (DirectionErrorMan < -50)	DirectionErrorMan = -50;
-		printf("DirectionErrorMan = %d\n", DirectionErrorMan);
+		printf("DirectionErrorMan = %d\n", (s16)DirectionErrorMan);
 	}
 	delayms(20);
 	//printf("State = %d\n", State);
