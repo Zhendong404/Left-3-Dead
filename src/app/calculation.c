@@ -218,7 +218,15 @@ u32 DirectionPIDcontrol(float DirectionError)
 	}
 	
 	//对偏差进行一个非线性的映射
-	//DirectionError = DirectionError * DirectionError / 50;
+	if (DirectionError > 0 )
+	{
+		DirectionError = DirectionError * DirectionError / 50;
+	}
+	else
+	{
+		DirectionError = -1 * DirectionError * DirectionError / 50;
+	}
+	
 
 	//偏差大于5，应该左转
 	if(DirectionError >= 5)
@@ -234,8 +242,8 @@ u32 DirectionPIDcontrol(float DirectionError)
 	//printf("DirectionPIDcontrol: e2=%d, e1=%d, e0=%d\n", e2, e1, e0);
 	//printf("DutyStd = %ld\t", DutyStd);
 
-	if (DutyStd > 40)	DutyStd = 40;
-	if (DutyStd < -40)	DutyStd = -40;
+	if (DutyStd > 45)	DutyStd = 45;	//左转的限幅
+	if (DutyStd < -41)	DutyStd = -41;	//右转的限幅
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
 
 	duty = (u32)(DutyStd * 0.8f + 146);	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
