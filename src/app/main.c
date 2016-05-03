@@ -53,7 +53,7 @@ extern uint8 ImgNew[CameraHeight][CameraWidth];
 
 void main()
 {
-       
+       //²âÊÔ
 	DisableInterrupts;                             //½ûÖ¹×ÜÖĞ¶Ï 
 
 	/*********************************************************
