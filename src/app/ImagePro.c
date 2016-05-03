@@ -23,8 +23,11 @@ Remark:		1.Begin this part 4.12
 //数据记录
 uint8 ImgNew[CameraHeight][CameraWidth];	//图片
 uint8 CenterLine[CameraHeight];						//中线
+uint8 CenterLinebak[CameraHeight];
 uint8 LeftBlackLine[CameraHeight];					//左黑线
+uint8 LeftBlackLinebak[CameraHeight];
 uint8 RightBlackLine[CameraHeight];					//右黑线
+uint8 RightBlackLinebak[CameraHeight];
 uint8 LeftDirectChange = 0;								//左边线检测时发现方向改变
 uint8 RightDirectChange = 0;								//右边线检测时发现方向转变
 
@@ -63,17 +66,19 @@ uint8 RightBlackDone = 0;					//右黑线提取成功标志
 uint8 LeftBlackCross = 0;					//左黑线检测出十字标志
 uint8 RightBlackCross = 0;				//右黑线检测出十字标志
 //uint8 CrossFlag = 0;						//十字检测标志
-uint8  const HalfWidth[CameraHeight] = {6,7,9,10,11,12,
-																14,17,18,20,23,24,
-																25,26,28,30,32,32,
-																35,36,37,39,39,40,
-																42,43,43,44,44,46,
-																46,47,48,48,49,50,
-																51,51,52,52,53,53,
-																53,54,55,56,57,57,
-																58,59};
+uint8  const HalfWidth[CameraHeight] = {16,17,19,20,21,22,
+																24,27,28,30,33,34,
+																35,36,38,40,42,42,
+																45,46,47,49,49,50,
+																52,53,53,54,54,56,
+																56,57,58,58,59,60,
+																61,61,62,62,63,63,
+																63,64,65,66,67,67,
+																68,70};
 																//直线路赛道宽度（需测量）
 uint8 Directflag;									//方向标识
+uint8 Directleft = 0;								//左线初始方向
+uint8 Directright = 0;								//右线初始方向
 
 
 //2.函数定义
@@ -383,6 +388,12 @@ uint8 LeftLineSweep(uint8 row)
 	uint8 diff;					//记录跳变差
 //	uint8 count;				//记录连续检测点数
 	uint8 isBlackLine;		//记录该点是否确定为黑线
+
+	if (row < ImageEdge + 15)				//过高的地方调用此函数会出现左右线采混的情况
+	{
+		LeftBlackLine[row] = NullValue;
+		return 0;
+	}
 
 	start_col = CameraWidth / 2 - 1 + BlackSweep_Offset;
 	isBlackLine = 0;
@@ -792,8 +803,8 @@ uint8 LeftLineGet(void)							//获取左黑线
 	uint8 backsuprow;							//若需要向后补线，记录线头
 	uint8 crosssuprow1, crosssuprow2;	//若需要十字补线，记录线头
 	uint8 GapCount = 0;						//记录连续未采集到黑线的数目，用于判定Cross
-	//uint8 LeftDirect = 0;						//方向记录
-	//uint8 Directtemp = 0;					//初始方向计算
+	uint8 LeftDirect = 0;						//方向记录
+	uint8 Directtemp = 0;					//初始方向计算
 	//uint8 changerow = NullValue;			//方向改变行
 
 	backsuprow = NullValue;
@@ -808,8 +819,9 @@ uint8 LeftLineGet(void)							//获取左黑线
 
 	row = temp;
 
-	//if(LeftBlackLine[row] >= LeftBlackLine[row - 1]) Directtemp = 0;
-	//else Directtemp = 1;
+	if(LeftBlackLine[row] >= LeftBlackLine[row - 1]) Directtemp = 0;
+	else Directtemp = 1;
+	Directleft = Directtemp;
 
 	if(row < CameraHeight - BlackSweep_CrossLine)
 	{
@@ -825,13 +837,13 @@ uint8 LeftLineGet(void)							//获取左黑线
 		if(temp1 && temp2)						//连续两行提取成功
 		{
 			temp = (LeftBlackLine[row] + LeftBlackLine[row - 1]) / 2;		//调整预测值
-			//if(LeftBlackLine[row] >= LeftBlackLine[row - 1]) LeftDirect = 0;					//斜率向左
-			//else LeftDirect = 1;											//斜率向右
-			/*if(LeftDirect != Directtemp)		//寻线过程中线的方向发生变化
+			if(LeftBlackLine[row] >= LeftBlackLine[row - 1]) LeftDirect = 0;					//斜率向左
+			else LeftDirect = 1;											//斜率向右
+			if(LeftDirect != Directtemp)		//寻线过程中线的方向发生变化
 			{
 				LeftDirectChange = 1;
-				changerow = row + 2;
-			}*/
+				//changerow = row + 2;
+			}
 		}	
 		else if(!temp1 && temp2)		//避免因预测错误而出现的错误
 		{
@@ -894,10 +906,14 @@ uint8 LeftLineGet(void)							//获取左黑线
 	}
 
 	if(flag) LeftBlackDone = 1;
-        for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//中值滤波
-		LeftBlackLine[row] = MidFilter(&LeftBlackLine[row - MidPronum / 2]);
+    for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//中值滤波
+		LeftBlackLinebak[row] = MidFilter(&LeftBlackLine[row - MidPronum / 2]);
+	for (row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)
+		LeftBlackLine[row] = LeftBlackLinebak[row];		//最上面的点不会受滤波影响
 	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//均值滤波
-		LeftBlackLine[row] = AverageFilter(&LeftBlackLine[row - MidPronum / 2]);
+		LeftBlackLinebak[row] = AverageFilter(&LeftBlackLine[row - MidPronum / 2]);
+	for (row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)
+		LeftBlackLine[row] = LeftBlackLinebak[row];		//最上面的点不会受滤波影响
 
 	return LeftBlackDone;
 }
@@ -915,6 +931,12 @@ uint8 RightLineSweep(uint8 row)
 	uint8 diff;					//记录跳变差
 //	uint8 count;				//记录连续检测点数
 	uint8 isBlackLine;		//记录该点是否确定为黑线
+
+	if (row < ImageEdge + 10)				//过高的地方调用此函数会出现左右线采混的情况
+	{
+		RightBlackLine[row] = NullValue;
+		return 0;
+	}
 
 	if(LeftBlackDone == 1)
 	{
@@ -1337,8 +1359,8 @@ uint8 RightLineGet(void)							//获取右黑线
 	uint8 backsuprow;							//若需要向后补线，记录线头
 	uint8 crosssuprow1, crosssuprow2;	//若需要十字补线，记录线头
 	uint8 GapCount = 0;							//记录连续未采集到黑线的数目，用于判定Cross
-	//uint8 RightDirect = 0;						//方向记录
-	//uint8 Directtemp = 0;					//初始方向计算
+	uint8 RightDirect = 0;						//方向记录
+	uint8 Directtemp = 0;					//初始方向计算
 	//uint8 changerow = NullValue;			//方向改变行
 
 	backsuprow = NullValue;
@@ -1353,8 +1375,9 @@ uint8 RightLineGet(void)							//获取右黑线
 
 	row = temp;
 		
-	//if(RightBlackLine[row] >= RightBlackLine[row - 1]) Directtemp = 0;
-	//else Directtemp = 1;
+	if(RightBlackLine[row] >= RightBlackLine[row - 1]) Directtemp = 0;
+	else Directtemp = 1;
+	Directright = Directleft;
 
 	if(row < CameraHeight - BlackSweep_CrossLine)
 	{
@@ -1371,13 +1394,13 @@ uint8 RightLineGet(void)							//获取右黑线
 		if(temp1 && temp2)					//连续两行提取成功
 		{
 			temp = (RightBlackLine[row] + RightBlackLine[row - 1]) / 2;		//调整预测值
-			//if(RightBlackLine[row] >= RightBlackLine[row - 1]) RightDirect = 0;					//斜率向左
-			//else RightDirect = 1;											//斜率向右
-			/*if(RightDirect != Directtemp)								//寻线过程中线的方向发生变化
+			if(RightBlackLine[row] >= RightBlackLine[row - 1]) RightDirect = 0;					//斜率向左
+			else RightDirect = 1;											//斜率向右
+			if(RightDirect != Directtemp)								//寻线过程中线的方向发生变化
 			{
 				RightDirectChange = 1;
-				changerow = row + 2;
-			}*/
+				//changerow = row + 2;
+			}
 		}	
 			
 		else if(!temp1 && temp2)		//避免因预测错误而出现的错误
@@ -1441,10 +1464,15 @@ uint8 RightLineGet(void)							//获取右黑线
 	}
 
 	if(flag) RightBlackDone = 1;
+
 	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//中值滤波
-		RightBlackLine[row] = MidFilter(&RightBlackLine[row - MidPronum / 2]);
+		RightBlackLinebak[row] = MidFilter(&RightBlackLine[row - MidPronum / 2]);
+	for (row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)
+		RightBlackLine[row] = RightBlackLinebak[row];		//最上面的点不会受滤波影响
 	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//均值滤波
-		RightBlackLine[row] = AverageFilter(&RightBlackLine[row - MidPronum / 2]);
+		RightBlackLinebak[row] = AverageFilter(&RightBlackLine[row - MidPronum / 2]);
+	for (row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)
+		RightBlackLine[row] = RightBlackLinebak[row];
 	return RightBlackDone;
 }
 
@@ -1564,6 +1592,7 @@ uint8 MidFilter(uint8 x[])			//中值滤波
 			n++;
 		}
 	}
+	if (n <= MidPronum * 3 / 4) return x[MidPronum / 2];		//样本点太少就不滤了
 	for(i = 0; i < n; i++)
 	{
 		temp = i;
@@ -1575,7 +1604,7 @@ uint8 MidFilter(uint8 x[])			//中值滤波
 		y[temp] = temp_n;							//最小值交换
 	}
 	
-	return x[n / 2];
+	return y[n / 2];
 }
 
 /**************************************************************
@@ -1737,7 +1766,7 @@ uint8 CenterLineGet(void)					//中心线提取
 			tempR = RightBlackLine[row];
 			if(tempL != NullValue && tempR != NullValue)
 			{
-				CenterLine[row] = (tempL + tempR) / 2;
+				if(tempL < tempR) CenterLine[row] = (tempL + tempR) / 2;
 				if(row >= CameraHeight - ImageEdge)
 					tempCenter = CenterLine[row] - tempL;	//中心点矫正记录，若接下来出现有一侧线未找到的情况时启用
 																					// CenterLine[row] - tempL == tempR - CenterLine[row]
@@ -1747,14 +1776,16 @@ uint8 CenterLineGet(void)					//中心线提取
 				if(row < CameraHeight - ImageEdge && CenterLine[row + 1] != NullValue && RightBlackLine[row + 1] != NullValue)
 					CenterLine[row] = tempR - RightBlackLine[row + 1] + CenterLine[row + 1];
 				else
-					CenterLine[row] = tempR - HalfWidth[row];
+					//CenterLine[row] = tempR - HalfWidth[row];
+                                        CenterLine[row] = tempR / 2;
 			}
 			else if(tempL != NullValue && tempR == NullValue)
 			{
 				if(row < CameraHeight - ImageEdge && CenterLine[row + 1] != NullValue && LeftBlackLine[row + 1] != NullValue)
 					CenterLine[row] = tempL + CenterLine[row + 1] - LeftBlackLine[row + 1];
 				else
-					CenterLine[row] = tempL + HalfWidth[row];
+					//CenterLine[row] = tempL + HalfWidth[row];
+                                        CenterLine[row] = tempL + (CameraWidth - tempL) / 2;
 			}
 			else
 			{
@@ -1763,7 +1794,7 @@ uint8 CenterLineGet(void)					//中心线提取
 				else
 				{
 					if(row >= CameraHeight - ImageEdge)
-						CenterLine[row] = HalfWidth[row];
+						CenterLine[row] = 70;
 					else
 					{
 						CenterLine[row] = NullValue;
@@ -1795,9 +1826,119 @@ uint8 CenterLineGet(void)					//中心线提取
 		return 0;
 	}
 
+	uint8 judgerow;		//用于判断十字奇怪图像的判别
+
+	/*if (!LeftBlackDone && RightDirectChange)
+	{
+		if (!Directright)			//方向向左或垂直
+		{
+			for(row = CameraHeight - 1; row > 0; row--)
+				if (CenterLine[row] != NullValue && CenterLine[row - 1] != NullValue)
+					if (CenterLine[row] > CenterLine[row - 1])
+						judgerow = row - 1;
+					else
+					{
+						CenterLine[row] = NullValue;
+						CenterLine[row - 1] = NullValue;
+					}
+				else
+				{
+					if (CenterLine[row] != NullValue && CenterLine[row] < CenterLine[judgerow])
+						judgerow = row;
+					else if (CenterLine[row - 1] != NullValue && CenterLine[row - 1] < CenterLine[judgerow])
+						judgerow = row - 1;
+					else
+					{
+						CenterLine[row] = NullValue;
+						CenterLine[row - 1] = NullValue;
+					}
+				}
+		}
+		else						//方向向右
+		{
+			for (row = CameraHeight - 1; row > 0; row--)
+			if (CenterLine[row] != NullValue && CenterLine[row - 1] != NullValue)
+			if (CenterLine[row] < CenterLine[row - 1])
+				judgerow = row - 1;
+			else
+			{
+				CenterLine[row] = NullValue;
+				CenterLine[row - 1] = NullValue;
+			}
+			else
+			{
+				if (CenterLine[row] != NullValue && CenterLine[row] > CenterLine[judgerow])
+					judgerow = row;
+				else if (CenterLine[row - 1] != NullValue && CenterLine[row - 1] > CenterLine[judgerow])
+					judgerow = row - 1;
+				else
+				{
+					CenterLine[row] = NullValue;
+					CenterLine[row - 1] = NullValue;
+				}
+			}
+		}
+	}
+	else if (!RightBlackDone && LeftDirectChange)
+	{
+		if (!Directleft)			//方向向左或垂直
+		{
+			for (row = CameraHeight - 1; row > 0; row--)
+			if (CenterLine[row] != NullValue && CenterLine[row - 1] != NullValue)
+			if (CenterLine[row] > CenterLine[row - 1])
+				judgerow = row - 1;
+			else
+			{
+				CenterLine[row] = NullValue;
+				CenterLine[row - 1] = NullValue;
+			}
+			else
+			{
+				if (CenterLine[row] != NullValue && CenterLine[row] < CenterLine[judgerow])
+					judgerow = row;
+				else if (CenterLine[row - 1] != NullValue && CenterLine[row - 1] < CenterLine[judgerow])
+					judgerow = row - 1;
+				else
+				{
+					CenterLine[row] = NullValue;
+					CenterLine[row - 1] = NullValue;
+				}
+			}
+		}
+		else						//方向向右
+		{
+			for (row = CameraHeight - 1; row > 0; row--)
+			if (CenterLine[row] != NullValue && CenterLine[row - 1] != NullValue)
+			if (CenterLine[row] < CenterLine[row - 1])
+				judgerow = row - 1;
+			else
+			{
+				CenterLine[row] = NullValue;
+				CenterLine[row - 1] = NullValue;
+			}
+			else
+			{
+				if (CenterLine[row] != NullValue && CenterLine[row] > CenterLine[judgerow])
+					judgerow = row;
+				else if (CenterLine[row - 1] != NullValue && CenterLine[row - 1] > CenterLine[judgerow])
+					judgerow = row - 1;
+				else
+				{
+					CenterLine[row] = NullValue;
+					CenterLine[row - 1] = NullValue;
+				}
+			}
+		}
+	}*/
+
 	for(row = 0; row < CameraHeight; row++)					//检查中心线数据有效性
 		CenterLine[row] = BoundLimit(CenterLine[row], 0, CameraWidth - 1);
 
+	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//中值滤波
+		CenterLinebak[row] = MidFilter(&CenterLine[row - MidPronum / 2]);
+	for (row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)
+		CenterLine[row] = CenterLinebak[row];		//最上面的点不会受滤波影响
+        
 	for(row = CameraHeight - 2; row > 0; row--)				//检查中心线连续性
 	{
 		if(CenterLine[row] != NullValue && CenterLine[row + 1] != NullValue)
@@ -1805,23 +1946,26 @@ uint8 CenterLineGet(void)					//中心线提取
 			if(AbsNum(CenterLine[row] - CenterLine[row + 1]) <= BlackSweep_Cont) continue;
 			else
 			{
+                                uint8 rowtemp;
+                                for(rowtemp = row - 1; rowtemp > 0; rowtemp--)
+                                  CenterLine[rowtemp] = BoundLimit(CenterLine[rowtemp] - CenterLine[row] + CenterLine[row + 1], 0, CameraWidth - 1);
 				FailCount++;
 				CenterLine[row] = NullValue;
 			}
 			//这里应该可以继续优化算法来纠正错误-by_mxl
 		}
-                if(CenterLine[row + 2] != NullValue)
-                {
-                  if(CenterLine[row] != NullValue && AbsNum(CenterLine[row] - CenterLine[row + 2]) <= BlackSweep_Cont * 2) continue;
-                  if(CenterLine[row + 1] != NullValue && AbsNum(CenterLine[row + 1] - CenterLine[row + 2]) <= BlackSweep_Cont) continue;
-                  else
-                  {
-                    CenterLine[row] = NullValue;
-                    CenterLine[row + 1] = NullValue;
-                    FailCount++;
-                    FailCount++;
-                  }
-                }
+        if(CenterLine[row + 2] != NullValue)
+        {
+			if(CenterLine[row] != NullValue && AbsNum(CenterLine[row] - CenterLine[row + 2]) <= BlackSweep_Cont * 2) continue;
+            if(CenterLine[row + 1] != NullValue && AbsNum(CenterLine[row + 1] - CenterLine[row + 2]) <= BlackSweep_Cont) continue;
+            else
+            {
+		CenterLine[row] = NullValue;
+                CenterLine[row + 1] = NullValue;
+                FailCount++;
+                FailCount++;
+            }
+        }
 	}
 
 	if(FailCount >= CameraHeight - 15)			//错误点数过多
@@ -1837,9 +1981,13 @@ uint8 CenterLineGet(void)					//中心线提取
 
 	
 	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//中值滤波
-		CenterLine[row] = MidFilter(&CenterLine[row - MidPronum / 2]);
+		CenterLinebak[row] = MidFilter(&CenterLine[row - MidPronum / 2]);
+	for (row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)
+		CenterLine[row] = CenterLinebak[row];		//最上面的点不会受滤波影响
 	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//均值滤波
-		CenterLine[row] = AverageFilter(&CenterLine[row - MidPronum / 2]);
+		CenterLinebak[row] = AverageFilter(&CenterLine[row - MidPronum / 2]);
+	for (row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)
+		CenterLine[row] = CenterLinebak[row];		//最上面的点不会受滤波影响
 
 	return 1;
 }

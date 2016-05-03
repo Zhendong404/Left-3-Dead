@@ -36,7 +36,7 @@ Remark:		1.Begin this part 4.12
 
 //黑线搜索及提取
 #define ImageEdge 2						//图片边沿，检索线时不能超出这个边界
-#define BlackSweep_RowEnd 35		//大范围确定黑线线头终止行数
+#define BlackSweep_RowEnd 30		//大范围确定黑线线头终止行数
 #define BlackSweep_Offset 40			//大范围确定黑点中心偏移量
 #define BlackSweep_Win 15				//小范围确定黑点窗口大小
 #define BlackSweep_Cont 6				//黑点连线连续性阈值定义，连续两行检测到的黑点列差不能大于此值
