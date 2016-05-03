@@ -3,7 +3,7 @@
 #include "include.h"
 #include "FTM.h"
 #include "calculation.h"
-#define CenterPosition 20
+#define CenterPosition 72
 
 s16 CountTemp;
 s16 Speed;
@@ -185,7 +185,7 @@ s16 DirectionTransmitter()
 	//用加权平均计算总偏差
         //if(Error2 > Error22) Error = 16 * Error2;
 	//else Error = 16 * Error22;
-        Error = 6 * (Error1 + Error2);
+        Error = 6 * (Error11 + Error22);
         
 	//进行标准化，使偏差落在（-50，50）中，超出范围则直接忽略
 	DirectionError = Error * 2 / 3;
