@@ -6,8 +6,8 @@
 #define CenterPosition 72
 
 //#define DebugSpeed
-#define DebugDirection
-#define AutoSpeed
+//#define DebugDirection
+//#define AutoSpeed
 
 s16 CountTemp;
 s16 Speed;
@@ -19,7 +19,7 @@ extern uint8 CenterLine[CameraHight];      //中心线位置存储数组, 255为无效值
 extern uint8 CrossFlag;
 s16 DirectionKc = 2;
 float DirectionErrorMan = 0;
-
+float KL = 1.1f, KR = 1.0f;
 
 /*********************************************************** 
 函数名称：CCD_init
@@ -115,7 +115,7 @@ u32 SpeedPIcontrol(s16 Speed)
 
 	//输出限位，限制在0-100标准信号
 	if (DutyStd >100)	DutyStd = 100;
-	if (DutyStd <0)		DutyStd = 0;
+	if (DutyStd <-20)		DutyStd = -20;
 
 	duty = (u32)(DutyStd + 100);	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
 	
@@ -162,27 +162,25 @@ float DirectionTransmitter()
 	}
 	if(count != 0) ErrorS /= count;
 	#ifdef AutoSpeed
-	if (ErrorS >= 20)		SpeedSp = 10;
-	else					SpeedSp = 30;
-	//else if (ErrorS <= 5)	SpeedSp = 60;
-	//else					SpeedSp = 75 - 3 * ErrorS;
+	if (ErrorS >= 2 || ErrorS <= -2)	{SpeedSp = 10; KL=1.2; KR=1.1;}
+	else			{SpeedSp = 30; KL=0.9; KR=0.8;}
 	#endif
         
-	//计算20至25行与中心的平均偏差
+	//计算25至39行与基准的平均偏差
 	Error1 = 0;
 	count = 0;
-	for(k=0; k<5; k++)
+	for(k=0; k<15; k++)
 	{
-		if(CenterLine[20 + k] != NullValue){ Error1 += (CenterPosition - CenterLine[20+k]); count++;}
+		if(CenterLine[25 + k] != NullValue){ Error1 += (ErrorF - CenterLine[25+k]); count++;}
 	}
 	if(count != 0) Error1 /= count;
         
 	//计算25至39行与中心的平均偏差
 	Error2 = 0;
 	count = 0;
-	for(k=0; k<10; k++)
+	for(k=0; k<15; k++)
 	{
-		if(CenterLine[25 + k] != NullValue){ Error2 += (CenterPosition - CenterLine[25+k]); count++;}
+		if(CenterLine[25 + k] != NullValue){ Error2 += (CenterPosition - CenterLine[30+k]); count++;}
 	}
 	if(count != 0) Error2 /= count;
 
@@ -228,68 +226,44 @@ u32 DirectionPIDcontrol(float DirectionError)
 
 	sumduty = dutysave[0] + dutysave[1] + dutysave[2] + dutysave[3] + dutysave[4];
 	midduty = sumduty / 5;
-<<<<<<< HEAD
-	if(ImageProFlag == 1)
-=======
-	if(DirectionError < 5 && DirectionError > -5)
->>>>>>> parent of 49f7c1f... 鍙傛暟鏇存敼
+  if(ImageProFlag == 1)
+  {
+        if(DirectionError < 2 && DirectionError > -2)
 	{
-		if(DirectionError < 2 && DirectionError > -2)
-		{
-			duty = 146;
-			if(count < 5) count++;
-			for(u8 i = 0; i < 3;i++)dutysave[i] = dutysave[i + 1];
-			dutysave[4] = duty;
-			return duty;
-		}
+		duty = 146;
+		if(count < 5) count++;
+		for(u8 i = 0; i < 3;i++)dutysave[i] = dutysave[i + 1];
+		dutysave[4] = duty;
+		return duty;
+	}
 	
 	//对偏差进行一个非线性的映射
-	/*
-	if (DirectionError < 20 && DirectionError > -20)
-	{
-		DirectionError = DirectionError / 8; 
-	}
-	if (DirectionError > 40 || DirectionError < -40)
-	{
-		DirectionError = 2.5 * DirectionError - 75;
-	}
-	else
-	{
-		DirectionError = 1.125 * DirectionError - 20;
-	}
-	*/
-	if (DirectionError > 0)
+	if (DirectionError > 0 )
 	{
 		DirectionError = DirectionError * DirectionError / 50;
 	}
 	else
+	{
 		DirectionError = -1 * DirectionError * DirectionError / 50;
+	}
+	
 
 	//偏差大于5，应该左转
 	if(DirectionError >= 5)
 	{
-		DutyStd = 1.1f * DirectionError;
+		DutyStd = KL * DirectionError;
 	}
 	//偏差小于-5，应该右转
 	if(DirectionError <= -5)
 	{
-<<<<<<< HEAD
-		DutyStd = 0.8f * DirectionError;
-=======
-		DutyStd = 1.2f * DirectionError;
->>>>>>> parent of 49f7c1f... 鍙傛暟鏇存敼
+		DutyStd = KR * DirectionError;
 	}
 	//DutyStd += (e2 - e1  + (e2 - 2 * e1 + e0)) * DirectionKc;
 	//printf("DirectionPIDcontrol: e2=%d, e1=%d, e0=%d\n", e2, e1, e0);
 	//printf("DutyStd = %ld\t", DutyStd);
 
-<<<<<<< HEAD
-	if (DutyStd > 53)	DutyStd = 53;	//左转的限幅
+	if (DutyStd > 60)	DutyStd = 60;	//左转的限幅
 	if (DutyStd < -50)	DutyStd = -50;	//右转的限幅
-=======
-	if (DutyStd > 55)	DutyStd = 55;	//左转的限幅
-	if (DutyStd < -46)	DutyStd = -46;	//右转的限幅
->>>>>>> parent of 49f7c1f... 鍙傛暟鏇存敼
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
 
 	duty = (u32)(DutyStd * 0.8f + 146);	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
@@ -307,15 +281,11 @@ u32 DirectionPIDcontrol(float DirectionError)
 	}
   }
         if(CrossFlag) duty = 146;
-        //printf("CrossFlag = %d\n", CrossFlag);
+        printf("CrossFlag = %d\n", CrossFlag);
 	#ifdef DebugDirection
 	printf("duty = %ld\n", duty);
 	#endif
-<<<<<<< HEAD
         //if(!ImageProFlag)duty = 146;
-=======
-
->>>>>>> parent of 49f7c1f... 鍙傛暟鏇存敼
 	return duty;
 }
 
@@ -350,7 +320,7 @@ void Control()
 	//对速度的PI控制
 
 	//对方向的PID控制
-	if(ImageProFlag==1)
+	//if(ImageProFlag==1)
 	{
 		FTM_PWM_Duty(FTM1, CH0, DirectionPIDcontrol(DirectionTransmitter()));	//PID算法自动控制方向
 	}
