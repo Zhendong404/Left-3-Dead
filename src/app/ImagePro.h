@@ -14,8 +14,8 @@ Remark:		1.Begin this part 4.12
 #define ImagePro_H
 
 //Mode Selection
-//#define ImagePro_CarUse		//智能车内部图像处理
-#define ImagePro_PCUse		//上位机图像处理与生成
+#define ImagePro_CarUse		//智能车内部图像处理
+//#define ImagePro_PCUse		//上位机图像处理与生成
 
 //1.Header
 #include <stdio.h>

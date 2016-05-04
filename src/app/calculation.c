@@ -226,7 +226,7 @@ u32 DirectionPIDcontrol(float DirectionError)
 
 	sumduty = dutysave[0] + dutysave[1] + dutysave[2] + dutysave[3] + dutysave[4];
 	midduty = sumduty / 5;
-	if(DirectionError < 5 && DirectionError > -5)
+	if(DirectionError < 2 && DirectionError > -2)
 	{
 		duty = 146;
 		if(count < 5) count++;
@@ -254,13 +254,13 @@ u32 DirectionPIDcontrol(float DirectionError)
 	//偏差小于-5，应该右转
 	if(DirectionError <= -5)
 	{
-		DutyStd = 1.2f * DirectionError;
+		DutyStd = 1.0f * DirectionError;
 	}
 	//DutyStd += (e2 - e1  + (e2 - 2 * e1 + e0)) * DirectionKc;
 	//printf("DirectionPIDcontrol: e2=%d, e1=%d, e0=%d\n", e2, e1, e0);
 	//printf("DutyStd = %ld\t", DutyStd);
 
-	if (DutyStd > 55)	DutyStd = 55;	//左转的限幅
+	if (DutyStd > 50)	DutyStd = 50;	//左转的限幅
 	if (DutyStd < -46)	DutyStd = -46;	//右转的限幅
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
 
@@ -280,7 +280,7 @@ u32 DirectionPIDcontrol(float DirectionError)
 	#ifdef DebugDirection
 	printf("duty = %ld\n", duty);
 	#endif
-
+        if(!ImageProFlag)duty = 146;
 	return duty;
 }
 
@@ -315,7 +315,7 @@ void Control()
 	//对速度的PI控制
 
 	//对方向的PID控制
-	if(ImageProFlag==1)
+	//if(ImageProFlag==1)
 	{
 		FTM_PWM_Duty(FTM1, CH0, DirectionPIDcontrol(DirectionTransmitter()));	//PID算法自动控制方向
 	}
