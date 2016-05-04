@@ -66,15 +66,15 @@ uint8 RightBlackDone = 0;					//右黑线提取成功标志
 uint8 LeftBlackCross = 0;					//左黑线检测出十字标志
 uint8 RightBlackCross = 0;				//右黑线检测出十字标志
 //uint8 CrossFlag = 0;						//十字检测标志
-uint8  const HalfWidth[CameraHeight] = {6,7,9,10,11,12,
-																14,17,18,20,23,24,
-																25,26,28,30,32,32,
-																35,36,37,39,39,40,
-																42,43,43,44,44,46,
-																46,47,48,48,49,50,
-																51,51,52,52,53,53,
-																53,54,55,56,57,57,
-																58,59};
+uint8  const HalfWidth[CameraHeight] = {16,17,19,20,21,22,
+																24,27,28,30,33,34,
+																35,36,38,40,42,42,
+																45,46,47,49,49,50,
+																52,53,53,54,54,56,
+																56,57,58,58,59,60,
+																61,61,62,62,63,63,
+																63,64,65,66,67,67,
+																68,70};
 																//直线路赛道宽度（需测量）
 uint8 Directflag;									//方向标识
 uint8 Directleft = 0;								//左线初始方向
@@ -1766,7 +1766,7 @@ uint8 CenterLineGet(void)					//中心线提取
 			tempR = RightBlackLine[row];
 			if(tempL != NullValue && tempR != NullValue)
 			{
-				CenterLine[row] = (tempL + tempR) / 2;
+				if(tempL < tempR) CenterLine[row] = (tempL + tempR) / 2;
 				if(row >= CameraHeight - ImageEdge)
 					tempCenter = CenterLine[row] - tempL;	//中心点矫正记录，若接下来出现有一侧线未找到的情况时启用
 																					// CenterLine[row] - tempL == tempR - CenterLine[row]
@@ -1776,14 +1776,16 @@ uint8 CenterLineGet(void)					//中心线提取
 				if(row < CameraHeight - ImageEdge && CenterLine[row + 1] != NullValue && RightBlackLine[row + 1] != NullValue)
 					CenterLine[row] = tempR - RightBlackLine[row + 1] + CenterLine[row + 1];
 				else
-					CenterLine[row] = tempR - HalfWidth[row];
+					//CenterLine[row] = tempR - HalfWidth[row];
+                                        CenterLine[row] = tempR / 2;
 			}
 			else if(tempL != NullValue && tempR == NullValue)
 			{
 				if(row < CameraHeight - ImageEdge && CenterLine[row + 1] != NullValue && LeftBlackLine[row + 1] != NullValue)
 					CenterLine[row] = tempL + CenterLine[row + 1] - LeftBlackLine[row + 1];
 				else
-					CenterLine[row] = tempL + HalfWidth[row];
+					//CenterLine[row] = tempL + HalfWidth[row];
+                                        CenterLine[row] = tempL + (CameraWidth - tempL) / 2;
 			}
 			else
 			{
@@ -1792,7 +1794,7 @@ uint8 CenterLineGet(void)					//中心线提取
 				else
 				{
 					if(row >= CameraHeight - ImageEdge)
-						CenterLine[row] = HalfWidth[row];
+						CenterLine[row] = 70;
 					else
 					{
 						CenterLine[row] = NullValue;
@@ -1826,7 +1828,7 @@ uint8 CenterLineGet(void)					//中心线提取
 
 	uint8 judgerow;		//用于判断十字奇怪图像的判别
 
-	if (!LeftBlackDone && RightDirectChange)
+	/*if (!LeftBlackDone && RightDirectChange)
 	{
 		if (!Directright)			//方向向左或垂直
 		{
@@ -1927,11 +1929,16 @@ uint8 CenterLineGet(void)					//中心线提取
 				}
 			}
 		}
-	}
+	}*/
 
 	for(row = 0; row < CameraHeight; row++)					//检查中心线数据有效性
 		CenterLine[row] = BoundLimit(CenterLine[row], 0, CameraWidth - 1);
 
+	for(row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)		//中值滤波
+		CenterLinebak[row] = MidFilter(&CenterLine[row - MidPronum / 2]);
+	for (row = CameraHeight - MidPronum / 2 - 1; row > MidPronum / 2 - 1; row--)
+		CenterLine[row] = CenterLinebak[row];		//最上面的点不会受滤波影响
+        
 	for(row = CameraHeight - 2; row > 0; row--)				//检查中心线连续性
 	{
 		if(CenterLine[row] != NullValue && CenterLine[row + 1] != NullValue)
@@ -1939,6 +1946,9 @@ uint8 CenterLineGet(void)					//中心线提取
 			if(AbsNum(CenterLine[row] - CenterLine[row + 1]) <= BlackSweep_Cont) continue;
 			else
 			{
+                                uint8 rowtemp;
+                                for(rowtemp = row - 1; rowtemp > 0; rowtemp--)
+                                  CenterLine[rowtemp] = BoundLimit(CenterLine[rowtemp] - CenterLine[row] + CenterLine[row + 1], 0, CameraWidth - 1);
 				FailCount++;
 				CenterLine[row] = NullValue;
 			}
@@ -1950,7 +1960,7 @@ uint8 CenterLineGet(void)					//中心线提取
             if(CenterLine[row + 1] != NullValue && AbsNum(CenterLine[row + 1] - CenterLine[row + 2]) <= BlackSweep_Cont) continue;
             else
             {
-				CenterLine[row] = NullValue;
+		CenterLine[row] = NullValue;
                 CenterLine[row + 1] = NullValue;
                 FailCount++;
                 FailCount++;
@@ -2286,7 +2296,7 @@ uint8 ImagePro(void)
 	if(CenterLineDone)
 	{
 		//PathJudge();
-#ifdef ImagePro_PCUse
+//#ifdef ImagePro_PCUse
 		
 		for (int i = 0; i < CameraHeight; i++)
 		{
@@ -2321,7 +2331,7 @@ uint8 ImagePro(void)
 		//	printf("\n");
 		}
 		
-#endif
+//#endif
 		return 1;
 	}
 	return 0;
