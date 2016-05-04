@@ -389,11 +389,12 @@ uint8 LeftLineSweep(uint8 row)
 //	uint8 count;				//记录连续检测点数
 	uint8 isBlackLine;		//记录该点是否确定为黑线
 
-	if (row < ImageEdge + 15)				//过高的地方调用此函数会出现左右线采混的情况
+	if (row < ImageEdge + 3)				//过高的地方调用此函数会出现左右线采混的情况
 	{
 		LeftBlackLine[row] = NullValue;
 		return 0;
 	}
+	
 
 	start_col = CameraWidth / 2 - 1 + BlackSweep_Offset;
 	isBlackLine = 0;
@@ -932,11 +933,13 @@ uint8 RightLineSweep(uint8 row)
 //	uint8 count;				//记录连续检测点数
 	uint8 isBlackLine;		//记录该点是否确定为黑线
 
-	if (row < ImageEdge + 10)				//过高的地方调用此函数会出现左右线采混的情况
+	
+	if (row < ImageEdge + 3)				//过高的地方调用此函数会出现左右线采混的情况
 	{
 		RightBlackLine[row] = NullValue;
 		return 0;
 	}
+	
 
 	if(LeftBlackDone == 1)
 	{

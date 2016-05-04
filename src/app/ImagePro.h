@@ -14,8 +14,8 @@ Remark:		1.Begin this part 4.12
 #define ImagePro_H
 
 //Mode Selection
-#define ImagePro_CarUse		//智能车内部图像处理
-//#define ImagePro_PCUse		//上位机图像处理与生成
+//#define ImagePro_CarUse		//智能车内部图像处理
+#define ImagePro_PCUse		//上位机图像处理与生成
 
 //1.Header
 #include <stdio.h>
@@ -36,14 +36,14 @@ Remark:		1.Begin this part 4.12
 
 //黑线搜索及提取
 #define ImageEdge 2						//图片边沿，检索线时不能超出这个边界
-#define BlackSweep_RowEnd 30		//大范围确定黑线线头终止行数
+#define BlackSweep_RowEnd 20		//大范围确定黑线线头终止行数
 #define BlackSweep_Offset 25			//大范围确定黑点中心偏移量
 #define BlackSweep_Win 15				//小范围确定黑点窗口大小
 #define BlackSweep_Cont 6				//黑点连线连续性阈值定义，连续两行检测到的黑点列差不能大于此值
 #define BlackSweep_Edge 2				//跳变检测阈值定义，间距两列的点出现黑白变化视为黑线跳变
 #define BlackSweep_MidLine 30		//中距离阈值定义，行数小于此数值定义为中距离，黑点连续采样数减少
 #define BlackSweep_FarLine 20		//远距离阈值定义，行数小于此数值定义为远距离，黑点连续采样数减少
-#define BlackSweep_CrossGap 8		//十字预测宽度（行跨度）
+#define BlackSweep_CrossGap 6		//十字预测宽度（行跨度）
 #define BlackSweep_CrossLine 8		//十字补线时的最小补线行数
 #define BlackSupBack 4					//十字补线时，最小二乘法基于的点数
 #define BlackSupLimit 3					//十字补线检测时，最小二乘法结果与线性补线结果的最大误差
