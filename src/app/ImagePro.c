@@ -65,7 +65,7 @@ uint8 RightBlackDone = 0;					//右黑线提取成功标志
 //uint8 RightBlackHead = NullValue;	//右黑线线头位置（行数）
 uint8 LeftBlackCross = 0;					//左黑线检测出十字标志
 uint8 RightBlackCross = 0;				//右黑线检测出十字标志
-//uint8 CrossFlag = 0;						//十字检测标志
+uint8 CrossFlag = 0;						//十字检测标志
 uint8  const HalfWidth[CameraHeight] = {16,17,19,20,21,22,
 																24,27,28,30,33,34,
 																35,36,38,40,42,42,
@@ -371,6 +371,7 @@ uint8 BlackLineGet(void);														//左右黑线提取（调用）
 uint8 CenterLineGet(void);													//中心线提取
 uint8 MidFilter(uint8 x[]);														//中值滤波
 uint8 AverageFilter(uint8 x[]);												//均值滤波
+void isCrossFlag(void);
 //方向判断
 void PathJudge(void);															//方向判断
 uint8 CurveSignGet(void);														//曲率符号求取
@@ -1642,6 +1643,27 @@ uint8 AverageFilter(uint8 x[])	//均值滤波
 	return (uint8)temp_n;
 }
 
+void isCrossFlag(void)
+{
+  uint8 row;
+  uint8 fcount = 0;
+  for(row = 0; row < CameraHeight; row++)
+    if(LeftBlackLine[row] == NullValue) fcount++;
+  if(fcount > CameraHeight / 2 && LeftBlackCross) LeftBlackCross = 1;
+  else LeftBlackCross = 0;
+  fcount = 0;
+  for(row = 0; row < CameraHeight; row++)
+    if(RightBlackLine[row] == NullValue) fcount++;
+  if(fcount > CameraHeight / 2 && RightBlackCross) RightBlackCross = 1;
+  else RightBlackCross = 0;
+  
+  CrossFlag = LeftBlackCross && RightBlackCross;
+}
+
+
+
+
+
 /**************************************************************
 Function Name:	CenterLineGet
 Function:				get(generate) the center black line
@@ -1659,8 +1681,7 @@ uint8 CenterLineGet(void)					//中心线提取
 
 	tempCenter = HalfWidth[0];
 	flag = BlackLineGet();
-        
-        
+                
 	if(flag == 0)								//两条黑线均读取失败
 	{
 		for(row = CameraHeight - 1; row > 0; row--)
@@ -2296,10 +2317,11 @@ uint8 ImagePro(void)
 {
 	ImagePut();
 	CenterLineDone = CenterLineGet();
+        isCrossFlag();
 	if(CenterLineDone)
 	{
 		//PathJudge();
-//#ifdef ImagePro_PCUse
+#ifdef ImagePro_PCUse
 		
 		for (int i = 0; i < CameraHeight; i++)
 		{
@@ -2334,7 +2356,7 @@ uint8 ImagePro(void)
 		//	printf("\n");
 		}
 		
-//#endif
+#endif
 		return 1;
 	}
 	return 0;

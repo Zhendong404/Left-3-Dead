@@ -16,6 +16,7 @@ s16 SpeedSp = 10;
 float SI = 1.0f;//速度控制中的积分作用强弱，越大越强
 
 extern uint8 CenterLine[CameraHight];      //中心线位置存储数组, 255为无效值
+extern uint8 CrossFlag;
 s16 DirectionKc = 2;
 float DirectionErrorMan = 0;
 
@@ -166,21 +167,21 @@ float DirectionTransmitter()
 	else					SpeedSp = 75 - 3 * ErrorS;
 	#endif
         
-	//计算30至39行与基准的平均偏差
+	//计算25至39行与基准的平均偏差
 	Error1 = 0;
 	count = 0;
-	for(k=0; k<10; k++)
+	for(k=0; k<15; k++)
 	{
-		if(CenterLine[30 + k] != NullValue){ Error1 += (ErrorF - CenterLine[30+k]); count++;}
+		if(CenterLine[25 + k] != NullValue){ Error1 += (ErrorF - CenterLine[25+k]); count++;}
 	}
 	if(count != 0) Error1 /= count;
         
-	//计算30至39行与中心的平均偏差
+	//计算25至39行与中心的平均偏差
 	Error2 = 0;
 	count = 0;
-	for(k=0; k<10; k++)
+	for(k=0; k<15; k++)
 	{
-		if(CenterLine[30 + k] != NullValue){ Error2 += (CenterPosition - CenterLine[30+k]); count++;}
+		if(CenterLine[25 + k] != NullValue){ Error2 += (CenterPosition - CenterLine[30+k]); count++;}
 	}
 	if(count != 0) Error2 /= count;
 
@@ -226,7 +227,9 @@ u32 DirectionPIDcontrol(float DirectionError)
 
 	sumduty = dutysave[0] + dutysave[1] + dutysave[2] + dutysave[3] + dutysave[4];
 	midduty = sumduty / 5;
-	if(DirectionError < 2 && DirectionError > -2)
+  if(ImageProFlag == 1)
+  {
+        if(DirectionError < 2 && DirectionError > -2)
 	{
 		duty = 146;
 		if(count < 5) count++;
@@ -260,8 +263,8 @@ u32 DirectionPIDcontrol(float DirectionError)
 	//printf("DirectionPIDcontrol: e2=%d, e1=%d, e0=%d\n", e2, e1, e0);
 	//printf("DutyStd = %ld\t", DutyStd);
 
-	if (DutyStd > 50)	DutyStd = 50;	//左转的限幅
-	if (DutyStd < -46)	DutyStd = -46;	//右转的限幅
+	if (DutyStd > 50)	DutyStd = 53;	//左转的限幅
+	if (DutyStd < -46)	DutyStd = -50;	//右转的限幅
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
 
 	duty = (u32)(DutyStd * 0.8f + 146);	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
@@ -277,10 +280,13 @@ u32 DirectionPIDcontrol(float DirectionError)
 		else
 			duty = dutysave[4];
 	}
+  }
+        if(CrossFlag) duty = 146;
+        printf("CrossFlag = %d\n", CrossFlag);
 	#ifdef DebugDirection
 	printf("duty = %ld\n", duty);
 	#endif
-        if(!ImageProFlag)duty = 146;
+        //if(!ImageProFlag)duty = 146;
 	return duty;
 }
 
