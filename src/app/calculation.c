@@ -6,8 +6,8 @@
 #define CenterPosition 72
 
 //#define DebugSpeed
-//#define DebugDirection
-//#define AutoSpeed
+#define DebugDirection
+#define AutoSpeed
 
 s16 CountTemp;
 s16 Speed;
@@ -162,26 +162,27 @@ float DirectionTransmitter()
 	}
 	if(count != 0) ErrorS /= count;
 	#ifdef AutoSpeed
-	if (ErrorS >= 20)		SpeedSp = 15;
-	else if (ErrorS <= 5)	SpeedSp = 60;
-	else					SpeedSp = 75 - 3 * ErrorS;
+	if (ErrorS >= 20)		SpeedSp = 10;
+	else					SpeedSp = 30;
+	//else if (ErrorS <= 5)	SpeedSp = 60;
+	//else					SpeedSp = 75 - 3 * ErrorS;
 	#endif
         
-	//计算25至39行与基准的平均偏差
+	//计算20至25行与中心的平均偏差
 	Error1 = 0;
 	count = 0;
-	for(k=0; k<15; k++)
+	for(k=0; k<5; k++)
 	{
-		if(CenterLine[25 + k] != NullValue){ Error1 += (ErrorF - CenterLine[25+k]); count++;}
+		if(CenterLine[20 + k] != NullValue){ Error1 += (CenterPosition - CenterLine[20+k]); count++;}
 	}
 	if(count != 0) Error1 /= count;
         
 	//计算25至39行与中心的平均偏差
 	Error2 = 0;
 	count = 0;
-	for(k=0; k<15; k++)
+	for(k=0; k<10; k++)
 	{
-		if(CenterLine[25 + k] != NullValue){ Error2 += (CenterPosition - CenterLine[30+k]); count++;}
+		if(CenterLine[25 + k] != NullValue){ Error2 += (CenterPosition - CenterLine[25+k]); count++;}
 	}
 	if(count != 0) Error2 /= count;
 
@@ -227,44 +228,55 @@ u32 DirectionPIDcontrol(float DirectionError)
 
 	sumduty = dutysave[0] + dutysave[1] + dutysave[2] + dutysave[3] + dutysave[4];
 	midduty = sumduty / 5;
-  if(ImageProFlag == 1)
-  {
-        if(DirectionError < 2 && DirectionError > -2)
+	if(ImageProFlag == 1)
 	{
-		duty = 146;
-		if(count < 5) count++;
-		for(u8 i = 0; i < 3;i++)dutysave[i] = dutysave[i + 1];
-		dutysave[4] = duty;
-		return duty;
-	}
+		if(DirectionError < 2 && DirectionError > -2)
+		{
+			duty = 146;
+			if(count < 5) count++;
+			for(u8 i = 0; i < 3;i++)dutysave[i] = dutysave[i + 1];
+			dutysave[4] = duty;
+			return duty;
+		}
 	
 	//对偏差进行一个非线性的映射
-	if (DirectionError > 0 )
+	/*
+	if (DirectionError < 20 && DirectionError > -20)
+	{
+		DirectionError = DirectionError / 8; 
+	}
+	if (DirectionError > 40 || DirectionError < -40)
+	{
+		DirectionError = 2.5 * DirectionError - 75;
+	}
+	else
+	{
+		DirectionError = 1.125 * DirectionError - 20;
+	}
+	*/
+	if (DirectionError > 0)
 	{
 		DirectionError = DirectionError * DirectionError / 50;
 	}
 	else
-	{
 		DirectionError = -1 * DirectionError * DirectionError / 50;
-	}
-	
 
 	//偏差大于5，应该左转
 	if(DirectionError >= 5)
 	{
-		DutyStd = 1.2f * DirectionError;
+		DutyStd = 1.1f * DirectionError;
 	}
 	//偏差小于-5，应该右转
 	if(DirectionError <= -5)
 	{
-		DutyStd = 1.0f * DirectionError;
+		DutyStd = 0.8f * DirectionError;
 	}
 	//DutyStd += (e2 - e1  + (e2 - 2 * e1 + e0)) * DirectionKc;
 	//printf("DirectionPIDcontrol: e2=%d, e1=%d, e0=%d\n", e2, e1, e0);
 	//printf("DutyStd = %ld\t", DutyStd);
 
-	if (DutyStd > 50)	DutyStd = 53;	//左转的限幅
-	if (DutyStd < -46)	DutyStd = -50;	//右转的限幅
+	if (DutyStd > 53)	DutyStd = 53;	//左转的限幅
+	if (DutyStd < -50)	DutyStd = -50;	//右转的限幅
 	//printf("Error = %ld\tDutyStd = %ld\t", DirectionError, DutyStd);
 
 	duty = (u32)(DutyStd * 0.8f + 146);	//得到实际用于控制电机的占空比（还要除以PWM_precision=1000）
@@ -282,7 +294,7 @@ u32 DirectionPIDcontrol(float DirectionError)
 	}
   }
         if(CrossFlag) duty = 146;
-        printf("CrossFlag = %d\n", CrossFlag);
+        //printf("CrossFlag = %d\n", CrossFlag);
 	#ifdef DebugDirection
 	printf("duty = %ld\n", duty);
 	#endif
