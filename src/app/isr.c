@@ -301,17 +301,77 @@ void PORTE_IRQHandler()
 {
 	//  PORT_PCR_REG(PORTE, 10) |= PORT_PCR_ISF(1);
     u8  n = 0;    //引脚号
-	u8	State = 0;		//用于判断拨码开关的状态，4位二进制，1、2、3、4位从高到低
+    u8	State = 0;		//用于判断拨码开关的状态，4位二进制，1、2、3、4位从高到低
 
-	gpio_Interrupt_init(PORTE, 1, GPI_DOWN, GPI_DISAB);
-    n = 1;
-    if(PORTE_ISFR & (1 << n))			//PTE1触发中断
+    gpio_Interrupt_init(PORTE, 1, GPI_DOWN, GPI_DISAB);
+    gpio_Interrupt_init(PORTE, 2, GPI_DOWN, GPI_DISAB);
+    gpio_Interrupt_init(PORTE, 3, GPI_DOWN, GPI_DISAB);
+    code = getCode();
+    switch(code)
+    {
+          case 0: break;
+          case 1:
+            {
+                    if(PORTE_ISFR & (1 << 2))			//K2触发中断
+                    {
+                            PORTE_ISFR  |= (1 << n);		//写1清中断标志位
+                            KL += 0.05f;
+                    }
+                    else if(PORTE_ISFR & (1 << 3))		//K3触发中断
+                    {
+                            PORTE_ISFR  |= (1 << 2);
+                            KL -= 0.05f;
+                    }
+                    break;
+            }
+          case 2:
+            {
+                    if(PORTE_ISFR & (1 << 2))			//K2触发中断
+                    {
+                            PORTE_ISFR  |= (1 << n);		//写1清中断标志位
+                            KR += 0.05f;
+                    }
+                    else if(PORTE_ISFR & (1 << 3))		//K3触发中断
+                    {
+                            PORTE_ISFR  |= (1 << 2);
+                            KR -= 0.05f;
+                    }
+                    break;
+            }
+          case 3:
+            {
+                    if(PORTE_ISFR & (1 << 2))			//K2触发中断
+                    {
+                            PORTE_ISFR  |= (1 << n);		//写1清中断标志位
+                            SpeedStraight += 0.05f;
+                    }
+                    else if(PORTE_ISFR & (1 << 3))		//K3触发中断
+                    {
+                            PORTE_ISFR  |= (1 << 2);
+                            SpeedStraight -= 0.05f;
+                    }
+                    break;
+            }
+          case 4:
+            {
+                    if(PORTE_ISFR & (1 << 2))			//K2触发中断
+                    {
+                            PORTE_ISFR  |= (1 << n);		//写1清中断标志位
+                            SpeedTurn += 0.05f;
+                    }
+                    else if(PORTE_ISFR & (1 << 3))		//K3触发中断
+                    {
+                            PORTE_ISFR  |= (1 << 2);
+                            SpeedTurn -= 0.05f;
+                    }
+                    break;
+            }
+          default: break;
+    }
+ /*   if(PORTE_ISFR & (1 << 1))			//PTE1触发中断
 	{
 		PORTE_ISFR  |= (1 << n);		//写1清中断标志位
-		if (gpio_get(PORTE, 6) == 1)	State += 8;
-		if (gpio_get(PORTE, 7) == 1)	State += 4;
-		if (gpio_get(PORTE, 8) == 1)	State += 2;
-		if (gpio_get(PORTE, 9) == 1)	State += 1;
+                State = getCode();
 		SpeedSp = State * 7;
 		if (SpeedSp > 100)	SpeedSp = 100;	//对速度的设定值进行限位，最终保证在0-100
 	}
@@ -331,9 +391,12 @@ void PORTE_IRQHandler()
                 if (DirectionErrorMan < -50)	DirectionErrorMan = -50;
 		printf("DirectionErrorMan = %d\n", (s16)DirectionErrorMan);
 	}
+    */
 	delayms(20);
 	//printf("State = %d\n", State);
 	gpio_Interrupt_init(PORTE, 1, GPI_DOWN, RING);
+        gpio_Interrupt_init(PORTE, 2, GPI_DOWN, RING);
+        gpio_Interrupt_init(PORTE, 3, GPI_DOWN, RING);
 }
 
 /*************************************************************************

@@ -326,3 +326,17 @@ void Control()
 		FTM_PWM_Duty(FTM1, CH0, DirectionPIDcontrol(DirectionTransmitter()));	//PID算法自动控制方向
 	}
 }
+
+
+/**************************************
+*功能：获取拨码开关状态
+***************************************/
+u8 getCode(void)
+{
+    u8 State = 0;
+    if (gpio_get(PORTE, 6) == 1)	State += 8;
+    if (gpio_get(PORTE, 7) == 1)	State += 4;
+    if (gpio_get(PORTE, 8) == 1)	State += 2;
+    if (gpio_get(PORTE, 9) == 1)	State += 1;
+    return State;
+}
