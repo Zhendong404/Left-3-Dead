@@ -10,8 +10,10 @@ extern	s16 SpeedSp;
 extern	float SpeedKc;
 extern	float SI;
 extern  s16 DirectionKc;
-extern float DirectionErrorMan;
-extern u8 ImageProFlag;
+extern	float DirectionErrorMan;
+extern	u8 ImageProFlag;
+
+extern	float SpeedStraight, SpeedTurn;
 
 void CCD_INC (void);
 void DCMoto_init(void);
